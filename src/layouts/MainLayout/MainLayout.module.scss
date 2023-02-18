@@ -1,0 +1,39 @@
+@import "../../utils/commons.scss";
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  header {
+    height: var(--h-header);
+    width: 100%;
+    background-color: rgb(243, 243, 243);
+    @extend .flexRow;
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    nav {
+      @extend .flexRow;
+      gap: 1rem;
+      @extend .maxContainer;
+      ul {
+        @extend .flexRow;
+        gap: 1rem;
+        list-style: none;
+        li {
+          a {
+            text-decoration: none;
+            color: black;
+          }
+        }
+      }
+    }
+  }
+  main {
+    min-height: calc(100vh - var(--h-header));
+    margin-top: var(--h-header);
+  }
+}
