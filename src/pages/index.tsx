@@ -1,11 +1,41 @@
 import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "@next/font/google";
-import styles from "@/styles/Home.module.css";
-
-const inter = Inter({ subsets: ["latin"] });
+import { useEffect } from "react";
+import {
+  detainStudentFromExam,
+  getAttendanceBySubjectAndDate,
+  getDetainedStudents,
+} from "@/utils/api/services";
 
 export default function Home() {
+  useEffect(() => {
+    async function getData() {
+      const res = await getDetainedStudents(2023, "CER4C3");
+      console.log({ res });
+    }
+    async function detainStudent() {
+      const res = await detainStudentFromExam(
+        2023,
+        "CER4C3",
+        "mst3",
+        "DE19152"
+      );
+      console.log({ res });
+    }
+    async function getAttendance() {
+      const res = await getAttendanceBySubjectAndDate(
+        "2023",
+        "CER4C3",
+        "19_02_2023"
+      );
+      console.log({ res });
+    }
+    getData();
+    detainStudent();
+    getAttendance();
+  }, []);
+
   return (
     <>
       <Head>
@@ -14,7 +44,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={styles.main}>IET Attendance</main>
+      <main>IET Attendance</main>
     </>
   );
 }
