@@ -31,7 +31,6 @@ async function getDetained(year: string, subjectCode: string) {
     return { mst1: [], mst2: [], mst3: [], endSem: [] };
   }
   const detained = await snapshot.data().detained;
-  console.log(snapshot.data());
 
   if (!detained?.[subjectCode]) {
     return { mst1: [], mst2: [], mst3: [], endSem: [] };

@@ -4,8 +4,9 @@ import { Inter } from "@next/font/google";
 import { useEffect } from "react";
 import {
   detainStudentFromExam,
-  getAttendanceBySubjectAndDate,
   getDetainedStudents,
+  getStudentAttendanceByMonth,
+  markStudentAttendanceMultiple,
 } from "@/utils/api/services";
 
 export default function Home() {
@@ -16,24 +17,35 @@ export default function Home() {
     }
     async function detainStudent() {
       const res = await detainStudentFromExam(
-        2023,
+        "2023",
         "CER4C3",
         "mst3",
         "DE19152"
       );
       console.log({ res });
     }
-    async function getAttendance() {
-      const res = await getAttendanceBySubjectAndDate(
-        "2023",
+    async function markAttendance() {
+      const res = await markStudentAttendanceMultiple(
         "CER4C3",
-        "19_02_2023"
+        "19_02_2023",
+        ["DE19152", "DE19157"],
+        "present"
       );
       console.log({ res });
     }
-    getData();
-    detainStudent();
-    getAttendance();
+    async function getAttendanceByMonth() {
+      const res = await getStudentAttendanceByMonth(
+        "2023",
+        "CER4C3",
+        "DE19152",
+        2
+      );
+      console.log({ res });
+    }
+    // getData();
+    // detainStudent();
+    // markAttendance();
+    getAttendanceByMonth();
   }, []);
 
   return (

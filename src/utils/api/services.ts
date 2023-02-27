@@ -14,7 +14,7 @@ export async function getDetainedStudents(
 }
 
 export async function detainStudentFromExam(
-  year: string | number,
+  year: string,
   subjectCode: string,
   exam: string,
   studentId: string
@@ -28,11 +28,49 @@ export async function detainStudentFromExam(
 }
 
 export async function getAttendanceBySubjectAndDate(
-  year: string,
   subjectCode: string,
   attendanceDate: string
 ) {
   return await API.get("/attendance", {
-    params: { year, subjectCode, attendanceDate },
+    params: { subjectCode, attendanceDate },
+  });
+}
+
+export async function markStudentAttendance(
+  subjectCode: string,
+  attendanceDate: string,
+  studentId: string,
+  status: "present" | "absent"
+) {
+  return await API.post("/attendance", {
+    subjectCode,
+    attendanceDate,
+    studentId,
+    status,
+  });
+}
+
+export async function markStudentAttendanceMultiple(
+  subjectCode: string,
+  attendanceDate: string,
+  studentIds: string[],
+  status: "present" | "absent"
+) {
+  return await API.post("/attendance", {
+    subjectCode,
+    attendanceDate,
+    studentIds,
+    status,
+  });
+}
+
+export async function getStudentAttendanceByMonth(
+  year: string,
+  subjectCode: string,
+  studentId: string,
+  month: number
+) {
+  return await API.get("/attendance/student", {
+    params: { year, subjectCode, studentId, month },
   });
 }
