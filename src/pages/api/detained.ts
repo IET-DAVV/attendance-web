@@ -22,8 +22,8 @@ type RequestData = {
 };
 
 async function getDetained(year: string, subjectCode: string) {
-  const collectionRef = collection(database, "attendance");
-  const docRef = doc(collectionRef, year);
+  const collectionRef = collection(database, "attendance", year, "subjects");
+  const docRef = doc(collectionRef, subjectCode);
   const snapshot = await getDoc(docRef);
 
   if (!snapshot.exists()) {
@@ -32,15 +32,10 @@ async function getDetained(year: string, subjectCode: string) {
   }
   const detained = await snapshot.data().detained;
 
-  if (!detained?.[subjectCode]) {
+  if (!detained) {
     return { mst1: [], mst2: [], mst3: [], endSem: [] };
   }
-  const {
-    mst1 = [],
-    mst2 = [],
-    mst3 = [],
-    endSem = [],
-  } = detained[subjectCode];
+  const { mst1 = [], mst2 = [], mst3 = [], endSem = [] } = detained;
 
   return { mst1, mst2, mst3, endSem };
 }
@@ -51,39 +46,29 @@ async function markAsDetained(
   exam: string,
   studentId: string
 ) {
-  const collectionRef = collection(database, "attendance");
-  const docRef = doc(collectionRef, String(year));
+  const collectionRef = collection(database, "attendance", year, "subjects");
+  const docRef = doc(collectionRef, subjectCode);
   const snapshot = await getDoc(docRef);
 
   let allDetained: {
-    [subjectCode: string]: {
-      [key: string]: string[];
-    };
+    [key: string]: string[];
   } = {};
   const detained = await snapshot.data()?.detained;
   if (detained) {
     allDetained = detained;
   }
-  if (!allDetained[subjectCode]) {
-    allDetained[subjectCode] = {
-      mst1: [],
-      mst2: [],
-      mst3: [],
-      endSem: [],
-    };
+
+  if (!allDetained[exam]) {
+    allDetained[exam] = [];
   }
 
-  if (!allDetained[subjectCode][exam]) {
-    allDetained[subjectCode][exam] = [];
-  }
-
-  if (allDetained[subjectCode][exam].includes(studentId)) {
+  if (allDetained[exam].includes(studentId)) {
     return;
   }
 
-  allDetained[subjectCode] = {
-    ...allDetained[subjectCode],
-    [exam]: [...allDetained[subjectCode][exam], studentId],
+  allDetained = {
+    ...allDetained,
+    [exam]: [...allDetained[exam], studentId],
   };
   await updateDoc(docRef, {
     detained: allDetained,

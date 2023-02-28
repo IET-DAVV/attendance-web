@@ -6,8 +6,10 @@ import {
   detainStudentFromExam,
   getDetainedStudents,
   getStudentAttendanceByMonth,
+  getStudentAttendanceOnDate,
   markStudentAttendanceMultiple,
 } from "@/utils/api/services";
+import { getToday12AMDatetime } from "@/utils/functions";
 
 export default function Home() {
   useEffect(() => {
@@ -19,33 +21,38 @@ export default function Home() {
       const res = await detainStudentFromExam(
         "2023",
         "CER4C3",
-        "mst3",
+        "mst1",
         "DE19152"
       );
       console.log({ res });
     }
     async function markAttendance() {
       const res = await markStudentAttendanceMultiple(
-        "CER4C3",
-        "19_02_2023",
-        ["DE19152", "DE19157"],
-        "present"
+        "CER4C5",
+        getToday12AMDatetime().toString(),
+        ["DE19152", "DE19154"],
+        "absent"
       );
       console.log({ res });
     }
     async function getAttendanceByMonth() {
       const res = await getStudentAttendanceByMonth(
         "2023",
-        "CER4C3",
+        "CER4C5",
         "DE19152",
-        2
+        1
       );
+      console.log({ res });
+    }
+    async function getAttendanceOnDate() {
+      const res = await getStudentAttendanceOnDate("1677436200000", "DE19152");
       console.log({ res });
     }
     // getData();
     // detainStudent();
     // markAttendance();
     getAttendanceByMonth();
+    // getAttendanceOnDate();
   }, []);
 
   return (

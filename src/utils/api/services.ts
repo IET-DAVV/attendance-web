@@ -74,3 +74,13 @@ export async function getStudentAttendanceByMonth(
     params: { year, subjectCode, studentId, month },
   });
 }
+
+export async function getStudentAttendanceOnDate(
+  attendanceDate: string,
+  studentId: string,
+  subjectCode?: string
+) {
+  return await API.get("/attendance/date", {
+    params: { attendanceDate, studentId, subjectCode },
+  });
+}

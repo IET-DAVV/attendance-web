@@ -8,17 +8,21 @@ import {
   getDocs,
   where,
 } from "firebase/firestore";
+import {
+  formatFirebaseDateDDMMYYYY,
+  formDateDDMMYYYY,
+} from "@/utils/functions";
 
 type Response = {
   status: "success" | "error";
-  data?: Data;
+  data?: any;
   error?: string;
   message?: string;
 };
 
 type Data = {
-  present: string[]; // Student IDs (Enrollment No.s)
-  absent: string[];
+  presentStudentsList: string[]; // Student IDs (Enrollment No.s)
+  absentStudentsList: string[];
 };
 
 type RequestData = {
@@ -36,23 +40,62 @@ async function getStudentAttendanceByMonth(
   studentId: string,
   month: number
 ) {
-  const collectionRef = collection(database, "attendance", year, subjectCode);
+  const collectionRef = collection(
+    database,
+    "attendance",
+    year.toString(),
+    "subjects",
+    subjectCode,
+    "dates"
+  );
   const monthStart = new Date(Number(year), month, 1);
   const monthEnd = new Date(Number(year), month + 1, 1);
+  console.log(monthStart.toISOString(), monthEnd);
   const q = query(
     collectionRef,
-    where("attendanceDate", ">=", monthStart.getMilliseconds()),
-    where("attendanceDate", "<", monthEnd.getMilliseconds()),
-    where("present", "array-contains", studentId)
+    where("attendanceDate", ">=", monthStart.getTime()),
+    where("attendanceDate", "<", monthEnd.getTime())
   );
   const querySnapshot = await getDocs(q);
   const data = querySnapshot.docs.map((doc) => doc.data());
-  return data;
+  if (!data.length) {
+    return {
+      data: {
+        subjectCode,
+        studentId,
+        month,
+      },
+      status: "error",
+      message: "No attendance data found for this month",
+    };
+  }
+  const presentOnDates = data
+    .filter((d) => d.presentStudentsList?.includes(studentId))
+    .map((d) => formDateDDMMYYYY(Number(d.attendanceDate)));
+  const absentOnDates = data
+    .filter((d) => d.absentStudentsList?.includes(studentId))
+    .map((d) => formDateDDMMYYYY(Number(d.attendanceDate)));
+  const presentCount = presentOnDates.length;
+  const absentCount = absentOnDates.length;
+  const totalAttendanceCount = presentCount + absentCount;
+  const attendancePercentage = (presentCount / totalAttendanceCount) * 100;
+  return {
+    status: "success",
+    data: {
+      subjectCode,
+      studentId,
+      month,
+      presentOnDates,
+      absentOnDates,
+      totalAttendanceCount,
+      attendancePercentage,
+    },
+  };
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<any>
+  res: NextApiResponse<Response>
 ) {
   try {
     if (req.method !== "GET") {
@@ -60,13 +103,16 @@ export default async function handler(
     }
     const { year, subjectCode, studentId, month } = req.query;
 
-    const data = await getStudentAttendanceByMonth(
+    const { data, status, message } = await getStudentAttendanceByMonth(
       year as string,
       subjectCode as string,
       studentId as string,
       Number(month)
     );
-    res.status(200).json({ status: "success", data });
+    if (status === "error") {
+      return res.status(404).json({ status, data, message });
+    }
+    res.status(200).json({ status: status as any, data });
   } catch (error: any) {
     console.log("ERROR_IN_ATTENDANCE", error);
     res.status(500).json({ status: "error", error: error.message });
