@@ -10,6 +10,7 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import { getYear } from "@/utils/functions";
+import { checkAndCreateParentDocument } from "./student";
 
 type Response = {
   status: "success" | "error";
@@ -30,22 +31,6 @@ type RequestData = {
   studentIds?: string[]; // [DE191XX, DE192XX]
   status?: "present" | "absent";
 };
-
-// async function checkParentDocumentExists(){
-//   const year = getYear(attendanceDate) as string;
-//   const collectionRef = collection(
-//     database,
-//     "attendance",
-//     year,
-//     "subjects",
-//   );
-//   const docRef = doc(collectionRef, attendanceDate.toString());
-//   const snapshot = await getDoc(docRef);
-
-//   if (!snapshot.exists()) {
-//     console.log("No such document!");
-//     return { presentStudentsList: [], absentStudentsList: [] };
-// }
 
 async function getAttendance(attendanceDate: number, subjectCode: string) {
   const year = getYear(attendanceDate) as string;
@@ -76,6 +61,9 @@ async function markAttendance(
   status: "present" | "absent"
 ) {
   const year = getYear(attendanceDate) as string;
+
+  await checkAndCreateParentDocument(year, subjectCode);
+
   const collectionRef = collection(
     database,
     "attendance",
@@ -104,6 +92,9 @@ async function markAttendanceMultiple(
   status: "present" | "absent"
 ) {
   const year = getYear(attendanceDate);
+
+  await checkAndCreateParentDocument(year?.toString() as string, subjectCode);
+
   const collectionRef = collection(
     database,
     "attendance",
@@ -122,6 +113,7 @@ async function markAttendanceMultiple(
         arrayUnion(...studentIds),
       [status === "present" ? "absentStudentsList" : "presentStudentsList"]:
         arrayRemove(...studentIds),
+      attendanceDate,
     },
     { merge: true }
   );

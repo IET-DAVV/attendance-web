@@ -7,6 +7,7 @@ import {
   query,
   getDocs,
   where,
+  setDoc,
 } from "firebase/firestore";
 import {
   formatFirebaseDateDDMMYYYY,
@@ -34,6 +35,33 @@ type RequestData = {
   status?: "present" | "absent";
 };
 
+async function createParentDocumentBase(year: string, subjectCode: string) {
+  const collectionRef = collection(database, "attendance", year, "subjects");
+  const docRef = doc(collectionRef, subjectCode);
+  await setDoc(docRef, {
+    subjectCode,
+    detained: {
+      mst1: [],
+      mst2: [],
+      mst3: [],
+      endSem: [],
+    },
+  });
+}
+
+export async function checkAndCreateParentDocument(
+  year: string,
+  subjectCode: string
+) {
+  const collectionRef = collection(database, "attendance", year, "subjects");
+  const docRef = doc(collectionRef, subjectCode);
+  const snapshot = await getDoc(docRef);
+
+  if (!snapshot.exists()) {
+    await createParentDocumentBase(year, subjectCode);
+  }
+}
+
 async function getStudentAttendanceByMonth(
   year: string,
   subjectCode: string,
@@ -50,7 +78,9 @@ async function getStudentAttendanceByMonth(
   );
   const monthStart = new Date(Number(year), month, 1);
   const monthEnd = new Date(Number(year), month + 1, 1);
-  console.log(monthStart.toISOString(), monthEnd);
+
+  await checkAndCreateParentDocument(year, subjectCode);
+
   const q = query(
     collectionRef,
     where("attendanceDate", ">=", monthStart.getTime()),

@@ -5,8 +5,10 @@ import { useEffect } from "react";
 import {
   detainStudentFromExam,
   getDetainedStudents,
+  getIsStudentDetainedInSubject,
   getStudentAttendanceByMonth,
   getStudentAttendanceOnDate,
+  getStudentDetainedInSubjects,
   markStudentAttendanceMultiple,
 } from "@/utils/api/services";
 import { getToday12AMDatetime } from "@/utils/functions";
@@ -45,14 +47,27 @@ export default function Home() {
       console.log({ res });
     }
     async function getAttendanceOnDate() {
-      const res = await getStudentAttendanceOnDate("1677436200000", "DE19152");
+      const res = await getStudentAttendanceOnDate("1677522600000", "DE19152");
+      console.log({ res });
+    }
+    async function getDetainedAll() {
+      const res = await getStudentDetainedInSubjects("2023", "DE19152");
+      console.log({ res });
+    }
+    async function getIsDetained() {
+      const res = await getIsStudentDetainedInSubject(
+        "2023",
+        "DE19152",
+        "CER4C5",
+        "mst1"
+      );
       console.log({ res });
     }
     // getData();
     // detainStudent();
     // markAttendance();
-    getAttendanceByMonth();
-    // getAttendanceOnDate();
+    // getAttendanceByMonth();
+    getIsDetained();
   }, []);
 
   return (
