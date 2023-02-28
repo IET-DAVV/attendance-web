@@ -2,7 +2,8 @@ import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "@next/font/google";
 import { useEffect } from "react";
-import {
+import { attendanceServices, studentServices } from "@/utils/api/services";
+const {
   detainStudentFromExam,
   getDetainedStudents,
   getIsStudentDetainedInSubject,
@@ -10,64 +11,17 @@ import {
   getStudentAttendanceOnDate,
   getStudentDetainedInSubjects,
   markStudentAttendanceMultiple,
-} from "@/utils/api/services";
+} = attendanceServices;
+const { getAllStudentsByYear } = studentServices;
 import { getToday12AMDatetime } from "@/utils/functions";
 
 export default function Home() {
   useEffect(() => {
-    async function getData() {
-      const res = await getDetainedStudents(2023, "CER4C3");
-      console.log({ res });
+    async function getAll() {
+      const res = await getAllStudentsByYear("2019");
+      console.log(res);
     }
-    async function detainStudent() {
-      const res = await detainStudentFromExam(
-        "2023",
-        "CER4C3",
-        "mst1",
-        "DE19152"
-      );
-      console.log({ res });
-    }
-    async function markAttendance() {
-      const res = await markStudentAttendanceMultiple(
-        "CER4C5",
-        getToday12AMDatetime().toString(),
-        ["DE19152", "DE19154"],
-        "absent"
-      );
-      console.log({ res });
-    }
-    async function getAttendanceByMonth() {
-      const res = await getStudentAttendanceByMonth(
-        "2023",
-        "CER4C5",
-        "DE19152",
-        1
-      );
-      console.log({ res });
-    }
-    async function getAttendanceOnDate() {
-      const res = await getStudentAttendanceOnDate("1677522600000", "DE19152");
-      console.log({ res });
-    }
-    async function getDetainedAll() {
-      const res = await getStudentDetainedInSubjects("2023", "DE19152");
-      console.log({ res });
-    }
-    async function getIsDetained() {
-      const res = await getIsStudentDetainedInSubject(
-        "2023",
-        "DE19152",
-        "CER4C5",
-        "mst1"
-      );
-      console.log({ res });
-    }
-    // getData();
-    // detainStudent();
-    // markAttendance();
-    // getAttendanceByMonth();
-    getIsDetained();
+    getAll();
   }, []);
 
   return (
