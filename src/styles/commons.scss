@@ -1,0 +1,13 @@
+.flexRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.flexCol {
+  @extend .flexRow;
+  flex-direction: column;
+}
+.maxWidthContainer {
+  max-width: var(--w-container);
+  margin: 0 auto;
+}

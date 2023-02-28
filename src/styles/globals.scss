@@ -1,10 +1,13 @@
 :root {
   --clr-primary: #f1f5f8;
+  --clr-gray-light: #f1f5f8;
 
   --h-header: 80px;
   --w-container: 1200px;
 }
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;

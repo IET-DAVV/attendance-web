@@ -35,3 +35,8 @@ export function getToday12AMDatetime() {
   today.setHours(0, 0, 0, 0);
   return today.getTime();
 }
+
+export function getTotalDaysCountInCurrentMonth() {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+}
