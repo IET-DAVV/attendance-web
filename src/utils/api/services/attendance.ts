@@ -95,6 +95,21 @@ async function getIsStudentDetainedInSubject(
   });
 }
 
+async function getStudentsAttendanceInDateRange(
+  dateRange: {
+    startDate: number;
+    endDate: number;
+  },
+  subjectCode: string,
+  studentId?: string
+) {
+  if (!dateRange.startDate || !dateRange.endDate)
+    throw new Error("Invalid date range");
+  return await API.get("/attendance/date/range", {
+    params: { ...dateRange, subjectCode, studentId },
+  });
+}
+
 const attendanceServices = {
   getDetainedStudents,
   detainStudentFromExam,
@@ -105,6 +120,7 @@ const attendanceServices = {
   getStudentAttendanceOnDate,
   getStudentDetainedInSubjects,
   getIsStudentDetainedInSubject,
+  getStudentsAttendanceInDateRange,
 };
 
 export default attendanceServices;

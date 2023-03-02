@@ -53,7 +53,12 @@ export async function checkAndCreateParentDocument(
   year: string,
   subjectCode: string
 ) {
-  const collectionRef = collection(database, "attendance", year, "subjects");
+  const collectionRef = collection(
+    database,
+    "attendance",
+    year.toString(),
+    "subjects"
+  );
   const docRef = doc(collectionRef, subjectCode);
   const snapshot = await getDoc(docRef);
 

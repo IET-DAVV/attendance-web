@@ -32,6 +32,7 @@ export function getYear(
 
 export function getToday12AMDatetime() {
   const today = new Date();
+  // reset time to 12am
   today.setHours(0, 0, 0, 0);
   return today.getTime();
 }
@@ -39,4 +40,28 @@ export function getToday12AMDatetime() {
 export function getTotalDaysCountInCurrentMonth() {
   const today = new Date();
   return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+}
+
+export function getCurrentWeekDates() {
+  const currentDate = new Date();
+  const currentDay = currentDate.getDay();
+  const currentWeekDates = [];
+  for (let i = 1; i < 7; i++) {
+    const date = new Date();
+    // reset time to 12am
+    date.setHours(0, 0, 0, 0);
+    date.setDate(currentDate.getDate() - currentDay + i);
+    currentWeekDates.push(date);
+  }
+  return currentWeekDates;
+}
+
+export function getDateDayMonthYear(date: Date | string | number) {
+  const tempDate = new Date(date);
+  return {
+    date: tempDate.getDate(),
+    day: tempDate.toLocaleString("default", { weekday: "short" }),
+    month: tempDate.toLocaleString("default", { month: "short" }),
+    year: tempDate.getFullYear(),
+  };
 }

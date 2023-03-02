@@ -5,6 +5,14 @@
   width: 100%;
   padding-top: 2rem;
 
+  .actionBtns {
+    @extend .flexRow;
+    gap: 1rem;
+    .datePicker {
+      max-width: 250px;
+    }
+  }
+
   .tableContainer {
     margin-top: 2rem;
     width: 100%;

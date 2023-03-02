@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { attendanceServices, studentServices } from "@/utils/api/services";
 const { getAllStudentsByYear } = studentServices;
 import {
+  getCurrentWeekDates,
+  getDateDayMonthYear,
   getToday12AMDatetime,
   getTotalDaysCountInCurrentMonth,
 } from "@/utils/functions";
 import styles from "../styles/main.module.scss";
-import { Button, DatePicker, Pagination, Table } from "antd";
+import { Button, DatePicker, Pagination, Table, Tag } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import MainLayout from "@/layouts/MainLayout/MainLayout";
 const { RangePicker } = DatePicker;
@@ -31,37 +33,136 @@ export default function Home() {
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
-  const [currentDatePagination, setCurrentDatePagination] = useState(1);
+  const [currentWeekAttendance, setCurrentWeekAttendance] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  const columns = [
-    {
-      title: "Roll No.",
-      dataIndex: "rollID",
-      key: "rollID",
-    },
-    {
-      title: "Enrollment No.",
-      dataIndex: "uid",
-      key: "rollID",
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-    },
-  ];
+  const [columns, setColumns] = useState([]);
 
   useEffect(() => {
+    setLoading(true);
     const fetchStudents = async () => {
       const { data } = await getAllStudentsByYear("2019");
       setStudents(data.data);
     };
-    // const fetchAttendance = async () => {
-    //   const { data } = await attendanceServices.getAttendanceBySubjectAndDate(getToday12AMDatetime());
-    //   setAttendance(data.data);
-    // }
+    const fetchCurrentWeekAttendance = async () => {
+      const dateRange = getCurrentWeekDates();
+      const { data } =
+        await attendanceServices.getStudentsAttendanceInDateRange(
+          {
+            startDate: dateRange[0].getTime(),
+            endDate: dateRange[dateRange.length - 1].getTime(),
+          },
+          "CER4C3"
+        );
+      console.log(data.data);
+      setCurrentWeekAttendance(data.data);
+    };
+    async function markAttendance() {
+      await attendanceServices.markStudentAttendance(
+        "CER4C3",
+        getToday12AMDatetime().toString(),
+        "DE19152",
+        "present"
+      );
+    }
     fetchStudents();
+    fetchCurrentWeekAttendance();
+    setLoading(false);
+    // markAttendance();
   }, []);
+
+  useEffect(() => {
+    let prevColumns = [
+      {
+        title: "Roll No.",
+        dataIndex: "rollID",
+        key: "rollID",
+      },
+      {
+        title: "Enrollment No.",
+        dataIndex: "uid",
+        key: "uid",
+      },
+      {
+        title: "Name",
+        dataIndex: "name",
+        key: "name",
+      },
+    ];
+    let newColumns: any = [
+      ...prevColumns,
+      ...getCurrentWeekDates().map((date) => {
+        let ddmy = getDateDayMonthYear(date.getTime());
+        let today = new Date().setHours(0, 0, 0, 0);
+        return {
+          title: `${ddmy.day} ${ddmy.date} ${ddmy.month}`,
+          dataIndex: "attendance",
+          key: "attendance",
+          render: (text: any) => {
+            let attendanceStatus = text?.[date.getTime()];
+            return (
+              <span
+                style={{
+                  backgroundColor:
+                    today === date.getTime() ? "#d6e7ff" : "transparent",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Tag
+                  color={
+                    attendanceStatus === "Present"
+                      ? "green"
+                      : attendanceStatus === "Absent"
+                      ? "red"
+                      : "yellow"
+                  }
+                >
+                  {text?.[date.getTime()] || "NA"}
+                </Tag>
+              </span>
+            );
+          },
+        };
+      }),
+    ];
+    setColumns(newColumns);
+  }, []);
+
+  console.log(columns);
+
+  useEffect(() => {
+    if (Object.values(currentWeekAttendance)?.length) {
+      setStudents((prev: any) =>
+        prev.map((student: any) => {
+          let newAttendance = {};
+          Object.values(currentWeekAttendance).forEach((attendance: any) => {
+            if (attendance?.presentStudentsList?.includes(student.uid)) {
+              newAttendance = {
+                ...newAttendance,
+                [attendance.attendanceDate]: "Present",
+              };
+            } else {
+              newAttendance = {
+                ...newAttendance,
+                [attendance.attendanceDate]: "Absent",
+              };
+            }
+          });
+          return {
+            ...student,
+            attendance: newAttendance,
+          };
+        })
+      );
+    }
+  }, [currentWeekAttendance]);
+
+  useEffect(() => {
+    console.log(students);
+  }, [students]);
 
   return (
     <>
@@ -74,8 +175,10 @@ export default function Home() {
       <MainLayout className={styles.main}>
         <div className={styles.flexRow}>
           <h3>IET Attendance</h3>
-          <div>
-            <RangePicker />
+          <div className={styles.actionBtns}>
+            <div className={styles.datePicker}>
+              <RangePicker format={"DD/MM/YYYY"} />
+            </div>
             <Button icon={<PlusOutlined />} type="primary">
               New Attendance
             </Button>

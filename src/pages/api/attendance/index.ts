@@ -62,12 +62,12 @@ async function markAttendance(
 ) {
   const year = getYear(attendanceDate) as string;
 
-  await checkAndCreateParentDocument(year, subjectCode);
+  await checkAndCreateParentDocument(year.toString(), subjectCode);
 
   const collectionRef = collection(
     database,
     "attendance",
-    year,
+    year.toString(),
     "subjects",
     subjectCode,
     "dates"
@@ -76,6 +76,7 @@ async function markAttendance(
   await setDoc(
     docRef,
     {
+      attendanceDate,
       [status === "present" ? "presentStudentsList" : "absentStudentsList"]:
         arrayUnion(studentId),
       [status === "present" ? "absentStudentsList" : "presentStudentsList"]:
