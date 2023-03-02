@@ -36,13 +36,11 @@ type RequestData = {
 
 async function getAllStudentsByYearAndBranch(year: number, branch: string) {
   const collectionRef = collection(database, "students");
-  const q = query(
-    collectionRef,
-    where("enrollmentYear", "==", year),
-    where("branchID", "==", branch?.toUpperCase())
-  );
-  const snapshot = await getDocs(q);
-  const students = snapshot.docs.map((doc) => doc.data());
+  const documentRef = doc(collectionRef, `${year}_${branch}`);
+  const snapshot = await getDoc(documentRef);
+  const studentsData = snapshot.data();
+  if (!studentsData) return [];
+  const students = studentsData.students;
   return students;
 }
 

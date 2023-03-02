@@ -35,8 +35,14 @@ type RequestData = {
 };
 
 async function getStudentByEnrollmentID(id: string) {
-  const docRef = doc(database, "students", id);
-  const docSnap = await getDoc(docRef);
+  const collectionRef = collection(database, "students");
+  const q = query(
+    collectionRef,
+    where(`students.${id}.enrollmentID`, "==", id)
+  );
+  const snapshot = await getDocs(q);
+  if (snapshot.docs.length === 0) return null;
+  const docSnap = snapshot.docs[0];
   if (!docSnap.exists()) {
     return null;
   }
