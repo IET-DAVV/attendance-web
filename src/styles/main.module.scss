@@ -19,5 +19,9 @@
     border: 1px solid var(--clr-gray-light);
     border-radius: 0.5rem;
     overflow: hidden;
+
+    .today {
+      background-color: var(--clr-gray-light);
+    }
   }
 }

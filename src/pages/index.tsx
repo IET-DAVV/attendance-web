@@ -9,10 +9,12 @@ import {
   getTotalDaysCountInCurrentMonth,
 } from "@/utils/functions";
 import styles from "../styles/main.module.scss";
-import { Button, DatePicker, Pagination, Table, Tag } from "antd";
+import { Button, DatePicker, Pagination, Select, Table, Tag } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import MainLayout from "@/layouts/MainLayout/MainLayout";
+import AddNewAttendance from "@/components/AddNewAttendance/AddNewAttendance";
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 // rowSelection object indicates the need for row selection
 const rowSelection = {
@@ -34,6 +36,7 @@ export default function Home() {
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
   const [currentWeekAttendance, setCurrentWeekAttendance] = useState({});
+  const [newAttendanceDrawer, setNewAttendanceDrawer] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [columns, setColumns] = useState([]);
@@ -98,13 +101,14 @@ export default function Home() {
           title: `${ddmy.day} ${ddmy.date} ${ddmy.month}`,
           dataIndex: "attendance",
           key: "attendance",
+          className: today === date.getTime() ? styles.today : "",
           render: (text: any) => {
             let attendanceStatus = text?.[date.getTime()];
             return (
               <span
                 style={{
-                  backgroundColor:
-                    today === date.getTime() ? "#d6e7ff" : "transparent",
+                  // backgroundColor:
+                  //   today === date.getTime() ? "#d6e7ff" : "transparent",
                   height: "100%",
                   display: "flex",
                   alignItems: "center",
@@ -179,7 +183,11 @@ export default function Home() {
             <div className={styles.datePicker}>
               <RangePicker format={"DD/MM/YYYY"} />
             </div>
-            <Button icon={<PlusOutlined />} type="primary">
+            <Button
+              icon={<PlusOutlined />}
+              type="primary"
+              onClick={() => setNewAttendanceDrawer(true)}
+            >
               New Attendance
             </Button>
           </div>
@@ -194,6 +202,34 @@ export default function Home() {
             dataSource={students}
           />
         </div>
+        <AddNewAttendance
+          open={newAttendanceDrawer}
+          onClose={() => setNewAttendanceDrawer(false)}
+        >
+          <Table
+            rowSelection={{
+              type: "checkbox",
+              ...rowSelection,
+            }}
+            columns={[
+              ...columns?.filter((col: any) => col.title.includes("Name")),
+              {
+                title: "Attendance",
+                dataIndex: "attendance",
+                key: "attendance",
+                render: (text: any) => {
+                  return (
+                    <Select defaultValue="Present">
+                      <Option value="Present">Present</Option>
+                      <Option value="Absent">Absent</Option>
+                    </Select>
+                  );
+                },
+              },
+            ]}
+            dataSource={students}
+          />
+        </AddNewAttendance>
       </MainLayout>
     </>
   );
