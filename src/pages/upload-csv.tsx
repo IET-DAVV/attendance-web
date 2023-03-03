@@ -115,6 +115,7 @@ function addingStudents(newArray: Array<any>) {
   newArray.forEach((item: any) => {
     const branchID: any = getBranch(item.roll_no);
     const enrollmentYear = parseInt("20" + item.roll_no?.slice(0, 2));
+    const section = item.roll_no.slice(4)[0] === "0" ? "A" : "B";
     if (!branches[branchID]) {
       branches[branchID] = {
         branchID,
@@ -125,6 +126,8 @@ function addingStudents(newArray: Array<any>) {
             name: item.name,
             email: generateEmail(item.roll_no),
             enrollmentYear,
+            enrollmentID: item.enroll_no,
+            section,
           },
         },
       };
@@ -134,6 +137,8 @@ function addingStudents(newArray: Array<any>) {
         name: item.name,
         email: generateEmail(item.roll_no),
         enrollmentYear,
+        enrollmentID: item.enroll_no,
+        section,
       };
     }
   });

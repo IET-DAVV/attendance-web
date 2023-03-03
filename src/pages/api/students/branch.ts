@@ -40,8 +40,13 @@ async function getAllStudentsByYearAndBranch(year: number, branch: string) {
   const snapshot = await getDoc(documentRef);
   const studentsData = snapshot.data();
   if (!studentsData) return [];
-  const students = studentsData.students;
-  return students;
+  const students = Object.values(studentsData.students) || [];
+  const studentsSortedByRno = students.sort((a: any, b: any) => {
+    const aRno = Number(a.rollID.slice(4));
+    const bRno = Number(b.rollID.slice(4));
+    return aRno - bRno;
+  });
+  return studentsSortedByRno;
 }
 
 async function getAllStudentsByBranch(branch: string) {

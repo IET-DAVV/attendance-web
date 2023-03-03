@@ -1,4 +1,4 @@
-@import "../../utils/commons.scss";
+@import "../../styles/commons.scss";
 
 .container {
   min-height: 100vh;
@@ -18,7 +18,7 @@
     nav {
       @extend .flexRow;
       gap: 1rem;
-      @extend .maxContainer;
+      @extend .maxWidthContainer;
       ul {
         @extend .flexRow;
         gap: 1rem;

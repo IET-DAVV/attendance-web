@@ -1,0 +1,68 @@
+@import "../../styles/commons.scss";
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  @extend .flexRow;
+  display: none;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  position: fixed;
+  top: 0;
+  left: 0;
+  &.open {
+    display: flex;
+  }
+
+  .card {
+    & > div {
+      padding: 0 !important;
+      width: 300px;
+      height: 300px;
+      @extend .flexCol;
+      justify-content: start;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    .studentInfoContainer {
+      padding: 1rem;
+      .studentInfo {
+        h3 {
+          margin-top: 0.5rem;
+        }
+      }
+      > div:nth-of-type(2) {
+        gap: 0.6rem;
+      }
+    }
+    .actionBtns {
+      margin-top: auto;
+      @extend .flexRow;
+      justify-content: center;
+      > button {
+        border-radius: 0;
+        border: none;
+        flex: 1;
+        padding: 1rem 0;
+        height: auto;
+
+        &:nth-of-type(1) {
+          background-color: rgb(255, 188, 162);
+        }
+        &:nth-of-type(2) {
+          background-color: rgb(183, 255, 183);
+        }
+      }
+    }
+    animation: fadeIn 0.3s ease-in-out;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

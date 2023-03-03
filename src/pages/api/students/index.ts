@@ -39,7 +39,9 @@ async function getAllStudentsByYear(year: number) {
   const q = query(collectionRef, where("enrollmentYear", "==", year));
   const snapshot = await getDocs(q);
   const students = snapshot.docs.map((doc) => doc.data());
-  return students;
+  return students
+    ?.map((studentObj) => Object.values(studentObj.students))
+    .flat();
 }
 
 export default async function handler(

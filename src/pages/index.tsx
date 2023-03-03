@@ -1,7 +1,6 @@
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { attendanceServices, studentServices } from "@/utils/api/services";
-const { getAllStudentsByYear } = studentServices;
 import {
   getCurrentWeekDates,
   getDateDayMonthYear,
@@ -9,10 +8,28 @@ import {
   getTotalDaysCountInCurrentMonth,
 } from "@/utils/functions";
 import styles from "../styles/main.module.scss";
-import { Button, DatePicker, Pagination, Select, Table, Tag } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import {
+  Button,
+  DatePicker,
+  Dropdown,
+  MenuProps,
+  Pagination,
+  Select,
+  Table,
+  Tag,
+} from "antd";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  ExportOutlined,
+  FileExcelOutlined,
+  FilePdfOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import MainLayout from "@/layouts/MainLayout/MainLayout";
 import AddNewAttendance from "@/components/AddNewAttendance/AddNewAttendance";
+import dayjs from "dayjs";
+import { useGlobalContext } from "@/utils/context/GlobalContext";
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
@@ -31,8 +48,15 @@ const rowSelection = {
   }),
 };
 
+const currentClassInfo = {
+  year: "2021",
+  branch: "CS",
+  section: "B",
+  semester: "4",
+  subjectCode: "CER4C1",
+};
+
 export default function Home() {
-  const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
   const [currentWeekAttendance, setCurrentWeekAttendance] = useState({});
@@ -40,13 +64,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   const [columns, setColumns] = useState([]);
+  const { studentsAttendance, setStudentsAttendance } = useGlobalContext();
 
   useEffect(() => {
     setLoading(true);
-    const fetchStudents = async () => {
-      const { data } = await getAllStudentsByYear("2019");
-      setStudents(data.data);
-    };
+
     const fetchCurrentWeekAttendance = async () => {
       const dateRange = getCurrentWeekDates();
       const { data } =
@@ -55,24 +77,24 @@ export default function Home() {
             startDate: dateRange[0].getTime(),
             endDate: dateRange[dateRange.length - 1].getTime(),
           },
-          "CER4C3"
+          currentClassInfo.subjectCode
         );
       console.log(data.data);
       setCurrentWeekAttendance(data.data);
     };
-    async function markAttendance() {
-      await attendanceServices.markStudentAttendance(
-        "CER4C3",
-        getToday12AMDatetime().toString(),
-        "DE19152",
-        "present"
-      );
-    }
-    fetchStudents();
     fetchCurrentWeekAttendance();
     setLoading(false);
     // markAttendance();
   }, []);
+
+  async function markAttendanceMultiple() {
+    await attendanceServices.markStudentAttendanceMultiple(
+      currentClassInfo.subjectCode,
+      getToday12AMDatetime().toString(),
+      studentsAttendance?.map((student: any) => student.enrollmentID),
+      "present"
+    );
+  }
 
   useEffect(() => {
     let prevColumns = [
@@ -82,14 +104,23 @@ export default function Home() {
         key: "rollID",
       },
       {
-        title: "Enrollment No.",
-        dataIndex: "uid",
-        key: "uid",
+        title: "Enroll No.",
+        dataIndex: "enrollmentID",
+        key: "enrollmentID",
       },
       {
         title: "Name",
         dataIndex: "name",
         key: "name",
+        render: (text: string) => (
+          <span
+            style={{
+              textTransform: "capitalize",
+            }}
+          >
+            {text.toLowerCase()}
+          </span>
+        ),
       },
     ];
     let newColumns: any = [
@@ -121,7 +152,9 @@ export default function Home() {
                       ? "green"
                       : attendanceStatus === "Absent"
                       ? "red"
-                      : "yellow"
+                      : today === date.getTime()
+                      ? "blue"
+                      : ""
                   }
                 >
                   {text?.[date.getTime()] || "NA"}
@@ -139,19 +172,28 @@ export default function Home() {
 
   useEffect(() => {
     if (Object.values(currentWeekAttendance)?.length) {
-      setStudents((prev: any) =>
+      setStudentsAttendance((prev: any) =>
         prev.map((student: any) => {
           let newAttendance = {};
           Object.values(currentWeekAttendance).forEach((attendance: any) => {
-            if (attendance?.presentStudentsList?.includes(student.uid)) {
+            if (
+              attendance?.presentStudentsList?.includes(student.enrollmentID)
+            ) {
               newAttendance = {
                 ...newAttendance,
                 [attendance.attendanceDate]: "Present",
               };
-            } else {
+            } else if (
+              attendance?.absentStudentsList?.includes(student.enrollmentID)
+            ) {
               newAttendance = {
                 ...newAttendance,
                 [attendance.attendanceDate]: "Absent",
+              };
+            } else {
+              newAttendance = {
+                ...newAttendance,
+                [attendance.attendanceDate]: "NA",
               };
             }
           });
@@ -164,9 +206,33 @@ export default function Home() {
     }
   }, [currentWeekAttendance]);
 
-  useEffect(() => {
-    console.log(students);
-  }, [students]);
+  const onMenuClick: MenuProps["onClick"] = (e) => {
+    console.log("click", e);
+  };
+
+  // items arr for exporting and marking attendance
+  const items = [
+    {
+      key: "1",
+      label: "Export CSV",
+      icon: <FileExcelOutlined />,
+    },
+    {
+      key: "2",
+      label: "Export PDF",
+      icon: <FilePdfOutlined />,
+    },
+    {
+      key: "3",
+      label: "Mark Present",
+      icon: <CheckOutlined />,
+    },
+    {
+      key: "4",
+      label: "Mark Absent",
+      icon: <CloseOutlined />,
+    },
+  ];
 
   return (
     <>
@@ -180,8 +246,19 @@ export default function Home() {
         <div className={styles.flexRow}>
           <h3>IET Attendance</h3>
           <div className={styles.actionBtns}>
+            <div>
+              <Dropdown.Button menu={{ items, onClick: onMenuClick }}>
+                Actions
+              </Dropdown.Button>
+            </div>
             <div className={styles.datePicker}>
-              <RangePicker format={"DD/MM/YYYY"} />
+              <RangePicker
+                format={"DD/MM/YYYY"}
+                defaultValue={[
+                  dayjs(getCurrentWeekDates()[0]),
+                  dayjs(getCurrentWeekDates()[6]),
+                ]}
+              />
             </div>
             <Button
               icon={<PlusOutlined />}
@@ -194,12 +271,17 @@ export default function Home() {
         </div>
         <div className={styles.tableContainer}>
           <Table
+            bordered
             rowSelection={{
               type: "checkbox",
               ...rowSelection,
             }}
             columns={columns}
-            dataSource={students}
+            dataSource={studentsAttendance}
+            scroll={{
+              x: 1000,
+              y: 500,
+            }}
           />
         </div>
         <AddNewAttendance
@@ -227,7 +309,7 @@ export default function Home() {
                 },
               },
             ]}
-            dataSource={students}
+            dataSource={studentsAttendance}
           />
         </AddNewAttendance>
       </MainLayout>
