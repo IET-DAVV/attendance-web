@@ -38,12 +38,14 @@ type RequestData = {
 async function createStudentMultiple(data: Array<any>) {
   const collectionRef = collection(database, "students");
   const batch = writeBatch(database);
-  data.forEach((student) => {
+  data.forEach((brancDoc) => {
     const documentRef = doc(
       collectionRef,
-      `${student.enrollmentYear}_${student.branchID}}`
+      `${brancDoc.enrollmentYear}_${brancDoc.branchID}`
     );
-    batch.set(documentRef, student);
+    batch.set(documentRef, {
+      ...brancDoc,
+    });
   });
   await batch.commit();
 }
@@ -55,8 +57,11 @@ export default async function handler(
   try {
     switch (req.method) {
       case "POST": {
-        const { data } = req.body;
+        const data = req.body;
         await createStudentMultiple(data);
+        return res.status(200).json({
+          status: "success",
+        });
       }
       default:
         return res.status(405).end();

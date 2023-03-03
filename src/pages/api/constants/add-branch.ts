@@ -36,11 +36,17 @@ type RequestData = {
   branch?: string; // 2023
 };
 
-async function createNewBranches(data: Array<any>) {
+async function createNewBranches(data: any) {
   const docRef = doc(database, "constants", "globals");
-  setDoc(docRef, data, {
-    merge: true,
-  });
+  setDoc(
+    docRef,
+    {
+      branches: data,
+    },
+    {
+      merge: true,
+    }
+  );
 }
 
 export default async function handler(
@@ -50,8 +56,11 @@ export default async function handler(
   try {
     switch (req.method) {
       case "POST": {
-        const { data } = req.body;
+        const data = req.body;
         await createNewBranches(data);
+        return res.status(200).json({
+          status: "success",
+        });
       }
       default:
         return res.status(405).end();
