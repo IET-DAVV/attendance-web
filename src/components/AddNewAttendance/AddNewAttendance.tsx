@@ -85,7 +85,17 @@ const AddNewAttendance: React.FC<{
       className={clsx(styles.container, open ? styles.open : styles.close)}
       onClick={onClose}
     >
-      <Card className={styles.card} onClick={(e) => e.stopPropagation()}>
+      <Card
+        className={clsx(
+          styles.card,
+          currentStudent?.attendance?.[getToday12AMDatetime()] === "Absent"
+            ? styles.absent
+            : currentStudent?.attendance?.[getToday12AMDatetime()] === "Present"
+            ? styles.present
+            : ""
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className={clsx(styles.flexRow, styles.studentInfoContainer)}>
           <div className={styles.studentInfo}>
             <Tag>{`${today.day}, ${today.date} ${today.month}`}</Tag>
@@ -109,7 +119,17 @@ const AddNewAttendance: React.FC<{
             />
           </div>
         </div>
-        <div className={styles.actionBtns}>
+        <div
+          className={clsx(
+            styles.actionBtns,
+            currentStudent?.attendance?.[getToday12AMDatetime()] === "Absent"
+              ? styles.absent
+              : currentStudent?.attendance?.[getToday12AMDatetime()] ===
+                "Present"
+              ? styles.present
+              : ""
+          )}
+        >
           <Button
             type="default"
             onClick={handleClickAbsent}

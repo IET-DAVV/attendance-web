@@ -17,54 +17,56 @@ import {
   Select,
   Table,
   Tag,
+  Tooltip,
 } from "antd";
 import {
-  CheckOutlined,
-  CloseOutlined,
-  ExportOutlined,
+  EditOutlined,
   FileExcelOutlined,
   FilePdfOutlined,
   PlusOutlined,
+  UserDeleteOutlined,
 } from "@ant-design/icons";
 import MainLayout from "@/layouts/MainLayout/MainLayout";
 import AddNewAttendance from "@/components/AddNewAttendance/AddNewAttendance";
 import dayjs from "dayjs";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
-// rowSelection object indicates the need for row selection
-const rowSelection = {
-  onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
-    console.log(
-      `selectedRowKeys: ${selectedRowKeys}`,
-      "selectedRows: ",
-      selectedRows
-    );
+// items arr for exporting and marking attendance
+const actionMenuItems = [
+  {
+    key: "1",
+    label: "Export CSV",
+    icon: <FileExcelOutlined />,
   },
-  getCheckboxProps: (record: any) => ({
-    disabled: record.name === "Disabled User", // Column configuration not to be checked
-    name: record.name,
-  }),
-};
-
-const currentClassInfo = {
-  year: "2021",
-  branch: "CS",
-  section: "B",
-  semester: "4",
-  subjectCode: "CER4C1",
-};
+  {
+    key: "2",
+    label: "Export PDF",
+    icon: <FilePdfOutlined />,
+  },
+  {
+    key: "3",
+    label: "Edit Attendance",
+    icon: <EditOutlined />,
+  },
+  {
+    key: "4",
+    label: "Detain Students",
+    icon: <UserDeleteOutlined />,
+  },
+];
 
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
   const [currentWeekAttendance, setCurrentWeekAttendance] = useState({});
   const [newAttendanceDrawer, setNewAttendanceDrawer] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [columns, setColumns] = useState([]);
-  const { studentsAttendance, setStudentsAttendance } = useGlobalContext();
+  const { studentsAttendance, setStudentsAttendance, currentClassInfo } =
+    useGlobalContext();
 
   useEffect(() => {
     setLoading(true);
@@ -123,85 +125,16 @@ export default function Home() {
         ),
       },
     ];
-    let newColumns: any = [
-      ...prevColumns,
-      ...getCurrentWeekDates().map((date) => {
-        let ddmy = getDateDayMonthYear(date.getTime());
-        let today = new Date().setHours(0, 0, 0, 0);
-        return {
-          title: `${ddmy.day} ${ddmy.date} ${ddmy.month}`,
-          dataIndex: "attendance",
-          key: "attendance",
-          className: today === date.getTime() ? styles.today : "",
-          render: (text: any) => {
-            let attendanceStatus = text?.[date.getTime()];
-            return (
-              <span
-                style={{
-                  // backgroundColor:
-                  //   today === date.getTime() ? "#d6e7ff" : "transparent",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Tag
-                  color={
-                    attendanceStatus === "Present"
-                      ? "green"
-                      : attendanceStatus === "Absent"
-                      ? "red"
-                      : today === date.getTime()
-                      ? "blue"
-                      : ""
-                  }
-                >
-                  {text?.[date.getTime()] || "NA"}
-                </Tag>
-              </span>
-            );
-          },
-        };
-      }),
-    ];
+    let newColumns = getNewColumnsForCurrentWeek(prevColumns);
     setColumns(newColumns);
   }, []);
-
-  console.log(columns);
 
   useEffect(() => {
     if (Object.values(currentWeekAttendance)?.length) {
       setStudentsAttendance((prev: any) =>
-        prev.map((student: any) => {
-          let newAttendance = {};
-          Object.values(currentWeekAttendance).forEach((attendance: any) => {
-            if (
-              attendance?.presentStudentsList?.includes(student.enrollmentID)
-            ) {
-              newAttendance = {
-                ...newAttendance,
-                [attendance.attendanceDate]: "Present",
-              };
-            } else if (
-              attendance?.absentStudentsList?.includes(student.enrollmentID)
-            ) {
-              newAttendance = {
-                ...newAttendance,
-                [attendance.attendanceDate]: "Absent",
-              };
-            } else {
-              newAttendance = {
-                ...newAttendance,
-                [attendance.attendanceDate]: "NA",
-              };
-            }
-          });
-          return {
-            ...student,
-            attendance: newAttendance,
-          };
-        })
+        prev.map((student: any) =>
+          studentAttendanceStatus(currentWeekAttendance, student)
+        )
       );
     }
   }, [currentWeekAttendance]);
@@ -210,33 +143,20 @@ export default function Home() {
     console.log("click", e);
   };
 
-  // items arr for exporting and marking attendance
-  const items = [
-    {
-      key: "1",
-      label: "Export CSV",
-      icon: <FileExcelOutlined />,
+  const rowSelection = {
+    onChange: (selectedRowKeys: React.Key[], selectedRowsNew: any[]) => {
+      // console.log(
+      //   `selectedRowKeys: ${selectedRowKeys}`,
+      //   "selectedRows: ",
+      //   selectedRows
+      // );
+      setSelectedRows(selectedRowsNew);
     },
-    {
-      key: "2",
-      label: "Export PDF",
-      icon: <FilePdfOutlined />,
-    },
-    {
-      key: "3",
-      label: "Mark Present",
-      icon: <CheckOutlined />,
-    },
-    {
-      key: "4",
-      label: "Mark Absent",
-      icon: <CloseOutlined />,
-    },
-  ];
-
-  useEffect(() => {
-    console.log({ studentsAttendance });
-  }, [studentsAttendance]);
+    getCheckboxProps: (record: any) => ({
+      disabled: record.name === "Disabled User", // Column configuration not to be checked
+      name: record.name,
+    }),
+  };
 
   return (
     <>
@@ -251,9 +171,20 @@ export default function Home() {
           <h3>IET Attendance</h3>
           <div className={styles.actionBtns}>
             <div>
-              <Dropdown.Button menu={{ items, onClick: onMenuClick }}>
-                Actions
-              </Dropdown.Button>
+              <Tooltip
+                title={
+                  selectedRows?.length
+                    ? "Actions For Students"
+                    : "Select Students to enable Actions"
+                }
+              >
+                <Dropdown.Button
+                  disabled={!selectedRows?.length}
+                  menu={{ items: actionMenuItems, onClick: onMenuClick }}
+                >
+                  Actions
+                </Dropdown.Button>
+              </Tooltip>
             </div>
             <div className={styles.datePicker}>
               <RangePicker
@@ -291,32 +222,86 @@ export default function Home() {
         <AddNewAttendance
           open={newAttendanceDrawer}
           onClose={() => setNewAttendanceDrawer(false)}
-        >
-          <Table
-            rowSelection={{
-              type: "checkbox",
-              ...rowSelection,
-            }}
-            columns={[
-              ...columns?.filter((col: any) => col.title.includes("Name")),
-              {
-                title: "Attendance",
-                dataIndex: "attendance",
-                key: "attendance",
-                render: (text: any) => {
-                  return (
-                    <Select defaultValue="Present">
-                      <Option value="Present">Present</Option>
-                      <Option value="Absent">Absent</Option>
-                    </Select>
-                  );
-                },
-              },
-            ]}
-            dataSource={studentsAttendance}
-          />
-        </AddNewAttendance>
+        />
       </MainLayout>
     </>
   );
+}
+
+function getNewColumnsForCurrentWeek(prevColumns: Array<any>) {
+  let newColumns: any = [
+    ...prevColumns,
+    ...getCurrentWeekDates().map((date) => {
+      let ddmy = getDateDayMonthYear(date.getTime());
+      let today = new Date().setHours(0, 0, 0, 0);
+      return {
+        title: `${ddmy.day} ${ddmy.date} ${ddmy.month}`,
+        dataIndex: "attendance",
+        key: "attendance",
+        className: today === date.getTime() ? styles.today : "",
+        render: (text: any) => {
+          let attendanceStatus = text?.[date.getTime()];
+          return (
+            <span
+              style={{
+                // backgroundColor:
+                //   today === date.getTime() ? "#d6e7ff" : "transparent",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Tag
+                color={
+                  attendanceStatus === "Present"
+                    ? "green"
+                    : attendanceStatus === "Absent"
+                    ? "red"
+                    : today === date.getTime()
+                    ? "blue"
+                    : ""
+                }
+              >
+                {text?.[date.getTime()] || "NA"}
+              </Tag>
+            </span>
+          );
+        },
+      };
+    }),
+  ];
+
+  return newColumns;
+}
+
+function studentAttendanceStatus(
+  currentWeekAttendance: {
+    [key: string]: any;
+  },
+  student: { enrollmentID: string }
+) {
+  let newAttendance = {};
+  Object.values(currentWeekAttendance).forEach((attendance: any) => {
+    if (attendance?.presentStudentsList?.includes(student.enrollmentID)) {
+      newAttendance = {
+        ...newAttendance,
+        [attendance.attendanceDate]: "Present",
+      };
+    } else if (attendance?.absentStudentsList?.includes(student.enrollmentID)) {
+      newAttendance = {
+        ...newAttendance,
+        [attendance.attendanceDate]: "Absent",
+      };
+    } else {
+      newAttendance = {
+        ...newAttendance,
+        [attendance.attendanceDate]: "NA",
+      };
+    }
+  });
+  return {
+    ...student,
+    attendance: newAttendance,
+  };
 }

@@ -6,7 +6,12 @@ import {
   useState,
 } from "react";
 import { studentServices } from "../api/services";
-import { IStudent, IStudentAttendance, ISubject } from "../interfaces";
+import {
+  ICurrentClassInfo,
+  IStudent,
+  IStudentAttendance,
+  ISubject,
+} from "../interfaces";
 
 interface IGlobalContext {
   students: Array<IStudent>;
@@ -14,15 +19,8 @@ interface IGlobalContext {
   setStudentsAttendance: React.Dispatch<SetStateAction<IStudentAttendance[]>>;
   subjects: Array<ISubject>;
   currentSubject: ISubject | null;
+  currentClassInfo: ICurrentClassInfo;
 }
-
-const currentClassInfo = {
-  year: "2021",
-  branch: "CS",
-  section: "B",
-  semester: "4",
-  subjectCode: "CER4C1",
-};
 
 const GlobalContext = createContext<IGlobalContext>({} as IGlobalContext);
 
@@ -39,29 +37,35 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   >([]);
   const [subjects, setSubjects] = useState<Array<ISubject>>([]);
   const [currentSubject, setCurrentSubject] = useState<ISubject | null>(null);
-
-  const fetchStudents = async () => {
-    const { data } = await studentServices.getAllStudentsByYearAndBranch(
-      currentClassInfo.year,
-      currentClassInfo.branch
-    );
-    setStudents(
-      data.data?.map((student: any) => ({
-        ...student,
-        key: student.enrollmentID,
-      }))
-    );
-    setStudentsAttendance(
-      data.data?.map((student: any) => ({
-        ...student,
-        key: student.enrollmentID,
-      }))
-    );
-  };
+  const [currentClassInfo, setCurrentClassInfo] = useState<ICurrentClassInfo>({
+    year: 2021,
+    branch: "CS",
+    section: "B",
+    sem: 4,
+    subjectCode: "CER4C1",
+  });
 
   useEffect(() => {
+    const fetchStudents = async () => {
+      const { data } = await studentServices.getAllStudentsByYearAndBranch(
+        currentClassInfo.year,
+        currentClassInfo.branch
+      );
+      setStudents(
+        data.data?.map((student: any) => ({
+          ...student,
+          key: student.enrollmentID,
+        }))
+      );
+      setStudentsAttendance(
+        data.data?.map((student: any) => ({
+          ...student,
+          key: student.enrollmentID,
+        }))
+      );
+    };
     fetchStudents();
-  }, []);
+  }, [currentClassInfo.branch, currentClassInfo.year]);
 
   return (
     <GlobalContext.Provider
@@ -71,6 +75,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         setStudentsAttendance,
         subjects,
         currentSubject,
+        currentClassInfo,
       }}
     >
       {children}

@@ -30,3 +30,11 @@ export interface ISubject {
   course?: string;
   branchCode?: string;
 }
+
+export interface ICurrentClassInfo {
+  year: number;
+  branch: string;
+  section: string;
+  sem: number;
+  subjectCode: string;
+}

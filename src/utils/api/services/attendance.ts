@@ -1,13 +1,13 @@
 import API from "../config";
 
-async function getDetainedStudents(year: string | number, subjectCode: string) {
+async function getDetainedStudents(year: number | number, subjectCode: string) {
   return await API.get("/detained", {
     params: { year, subjectCode },
   });
 }
 
 async function detainStudentFromExam(
-  year: string,
+  year: number,
   subjectCode: string,
   exam: string,
   studentId: string
@@ -58,7 +58,7 @@ async function markStudentAttendanceMultiple(
 }
 
 async function getStudentAttendanceByMonth(
-  year: string,
+  year: number,
   subjectCode: string,
   studentId: string,
   month: number
@@ -78,14 +78,14 @@ async function getStudentAttendanceOnDate(
   });
 }
 
-async function getStudentDetainedInSubjects(year: string, studentId: string) {
+async function getStudentDetainedInSubjects(year: number, studentId: string) {
   return await API.get("/detained/student", {
     params: { year, studentId },
   });
 }
 
 async function getIsStudentDetainedInSubject(
-  year: string,
+  year: number,
   subjectCode: string,
   exam: string,
   studentId: string

@@ -1,10 +1,10 @@
 import API from "../config";
 
-async function getAllStudentsByYear(year: string) {
+async function getAllStudentsByYear(year: number) {
   return await API.get("/students", { params: { year } });
 }
 
-async function getAllStudentsByYearAndBranch(year: string, branch: string) {
+async function getAllStudentsByYearAndBranch(year: number, branch: string) {
   return await API.get("/students/branch", { params: { year, branch } });
 }
 
