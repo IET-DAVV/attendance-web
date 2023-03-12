@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { createRef, useCallback, useEffect, useRef, useState } from "react";
 import { attendanceServices, studentServices } from "@/utils/api/services";
 import {
   getCurrentWeekDates,
@@ -30,6 +30,7 @@ import MainLayout from "@/layouts/MainLayout/MainLayout";
 import AddNewAttendance from "@/components/AddNewAttendance/AddNewAttendance";
 import dayjs from "dayjs";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
+import { CSVDownload, CSVLink } from "react-csv";
 const { RangePicker } = DatePicker;
 
 // items arr for exporting and marking attendance
@@ -62,38 +63,62 @@ export default function Home() {
   const [currentWeekAttendance, setCurrentWeekAttendance] = useState({});
   const [newAttendanceDrawer, setNewAttendanceDrawer] = useState(false);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [editAttendanceMode, setEditAttendanceMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentDateRange, setCurrentDateRange] = useState<any>([
+    dayjs(getCurrentWeekDates()[0]),
+    dayjs(getCurrentWeekDates()[6]),
+  ]);
 
   const [columns, setColumns] = useState([]);
   const { studentsAttendance, setStudentsAttendance, currentClassInfo } =
     useGlobalContext();
 
-  useEffect(() => {
-    setLoading(true);
+  const csvBtnRef = useRef<
+    CSVLink & HTMLAnchorElement & { link: HTMLAnchorElement }
+  >(null);
 
-    const fetchCurrentWeekAttendance = async () => {
-      const dateRange = getCurrentWeekDates();
-      const { data } =
-        await attendanceServices.getStudentsAttendanceInDateRange(
-          {
-            startDate: dateRange[0].getTime(),
-            endDate: dateRange[dateRange.length - 1].getTime(),
-          },
-          currentClassInfo.subjectCode
-        );
-      console.log(data.data);
-      setCurrentWeekAttendance(data.data);
-    };
-    fetchCurrentWeekAttendance();
+  const getCurrentDateRangeAttendance = useCallback(async () => {
+    setLoading(true);
+    const { data } = await attendanceServices.getStudentsAttendanceInDateRange(
+      {
+        startDate: currentDateRange[0].toDate().getTime(),
+        endDate: currentDateRange[1].toDate().getTime(),
+      },
+      currentClassInfo.subjectCode
+    );
+    setCurrentWeekAttendance(data.data);
     setLoading(false);
-    // markAttendance();
-  }, []);
+  }, [currentDateRange, currentClassInfo.subjectCode]);
+
+  useEffect(() => {
+    if (currentDateRange.length && currentClassInfo.subjectCode) {
+      getCurrentDateRangeAttendance();
+    }
+  }, [
+    currentDateRange,
+    currentClassInfo.subjectCode,
+    getCurrentDateRangeAttendance,
+  ]);
 
   async function markAttendanceMultiple() {
+    const todayTime = getToday12AMDatetime().toString();
+    const absentStudents = studentsAttendance?.filter(
+      (student: any) => (student.attendance[todayTime] = "Absent")
+    );
+    const presentStudents = studentsAttendance?.filter(
+      (student: any) => (student.attendance[todayTime] = "Present")
+    );
     await attendanceServices.markStudentAttendanceMultiple(
       currentClassInfo.subjectCode,
-      getToday12AMDatetime().toString(),
-      studentsAttendance?.map((student: any) => student.enrollmentID),
+      todayTime,
+      absentStudents?.map((student: any) => student.enrollmentID),
+      "absent"
+    );
+    await attendanceServices.markStudentAttendanceMultiple(
+      currentClassInfo.subjectCode,
+      todayTime,
+      presentStudents?.map((student: any) => student.enrollmentID),
       "present"
     );
   }
@@ -140,7 +165,12 @@ export default function Home() {
   }, [currentWeekAttendance]);
 
   const onMenuClick: MenuProps["onClick"] = (e) => {
-    console.log("click", e);
+    if (e.key === "1") {
+      if (csvBtnRef.current) csvBtnRef?.current?.link?.click();
+    }
+    if (e.key === "3") {
+      setEditAttendanceMode(true);
+    }
   };
 
   const rowSelection = {
@@ -157,6 +187,17 @@ export default function Home() {
       name: record.name,
     }),
   };
+
+  async function submitAttendance() {
+    await markAttendanceMultiple();
+    setNewAttendanceDrawer(false);
+  }
+
+  useEffect(() => {
+    if (studentsAttendance?.length) {
+      console.log(studentsAttendance);
+    }
+  }, [studentsAttendance]);
 
   return (
     <>
@@ -193,6 +234,10 @@ export default function Home() {
                   dayjs(getCurrentWeekDates()[0]),
                   dayjs(getCurrentWeekDates()[6]),
                 ]}
+                onChange={(dates) => {
+                  setCurrentDateRange(dates);
+                }}
+                value={currentDateRange}
               />
             </div>
             <Button
@@ -207,6 +252,7 @@ export default function Home() {
         <div className={styles.tableContainer}>
           <Table
             bordered
+            loading={loading}
             rowSelection={{
               type: "checkbox",
               ...rowSelection,
@@ -219,6 +265,11 @@ export default function Home() {
             }}
           />
         </div>
+        <CSVDownload
+          ref={csvBtnRef}
+          data={studentsAttendance}
+          filename={`attendance-${currentClassInfo.subjectCode}-${currentClassInfo.section}.csv`}
+        />
         <AddNewAttendance
           open={newAttendanceDrawer}
           onClose={() => setNewAttendanceDrawer(false)}

@@ -15,8 +15,7 @@ import styles from "./AddNewAttendance.module.scss";
 const AddNewAttendance: React.FC<{
   open: boolean;
   onClose: () => void;
-  children?: React.ReactNode;
-}> = ({ open, onClose, children }) => {
+}> = ({ open, onClose }) => {
   const today = getDateDayMonthYear(new Date());
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number>(0);
   const [currentStudent, setCurrentStudent] =
@@ -24,10 +23,24 @@ const AddNewAttendance: React.FC<{
 
   const { studentsAttendance, setStudentsAttendance } = useGlobalContext();
 
+  function getNewIndex(direction: "prev" | "next") {
+    let newIndex = currentStudentIndex;
+    if (direction === "prev") {
+      newIndex = currentStudentIndex - 1;
+      if (newIndex < 0) {
+        newIndex = studentsAttendance.length - 1;
+      }
+    } else {
+      newIndex = currentStudentIndex + 1;
+      if (newIndex >= studentsAttendance.length) {
+        newIndex = 0;
+      }
+    }
+    return newIndex;
+  }
+
   function handleClickAbsent() {
-    let newIndex = (currentStudentIndex + 1) % (studentsAttendance.length - 1);
-    console.log({ currentStudentIndex, newIndex });
-    setCurrentStudentIndex(newIndex);
+    setCurrentStudentIndex(getNewIndex("next"));
     setStudentsAttendance((prev) => {
       const newStudentsAttendance: any = [...prev];
       let absoluteTime = getToday12AMDatetime();
@@ -42,11 +55,7 @@ const AddNewAttendance: React.FC<{
   }
 
   function handleClickPresent() {
-    let newIndex = currentStudentIndex + 1;
-    if (newIndex >= studentsAttendance.length) {
-      newIndex = 0;
-    }
-    setCurrentStudentIndex(newIndex);
+    setCurrentStudentIndex(getNewIndex("next"));
     setStudentsAttendance((prev) => {
       const newStudentsAttendance: any = [...prev];
       let absoluteTime = getToday12AMDatetime();
@@ -61,19 +70,11 @@ const AddNewAttendance: React.FC<{
   }
 
   function handleClickNavigate(direction: "prev" | "next") {
-    if (direction === "prev") {
-      let newIndex = currentStudentIndex - 1;
-      if (newIndex < 0) {
-        newIndex = studentsAttendance.length - 1;
-      }
-      setCurrentStudentIndex(newIndex);
-    } else {
-      let newIndex = currentStudentIndex + 1;
-      if (newIndex >= studentsAttendance.length) {
-        newIndex = 0;
-      }
-      setCurrentStudentIndex(newIndex);
-    }
+    setCurrentStudentIndex(getNewIndex(direction));
+  }
+
+  function currentStudentAtteandanceStatus() {
+    return currentStudent?.attendance?.[getToday12AMDatetime()];
   }
 
   useEffect(() => {
@@ -85,22 +86,46 @@ const AddNewAttendance: React.FC<{
       className={clsx(styles.container, open ? styles.open : styles.close)}
       onClick={onClose}
     >
-      <Card
+      <div
         className={clsx(
           styles.card,
-          currentStudent?.attendance?.[getToday12AMDatetime()] === "Absent"
+          currentStudentAtteandanceStatus() === "Absent"
             ? styles.absent
-            : currentStudent?.attendance?.[getToday12AMDatetime()] === "Present"
+            : currentStudentAtteandanceStatus() === "Present"
             ? styles.present
             : ""
         )}
         onClick={(e) => e.stopPropagation()}
       >
+        <span
+          className={clsx(
+            styles.statusIndicator,
+            currentStudentAtteandanceStatus() === "Absent"
+              ? styles.absent
+              : currentStudentAtteandanceStatus() === "Present"
+              ? styles.present
+              : ""
+          )}
+        ></span>
         <div className={clsx(styles.flexRow, styles.studentInfoContainer)}>
           <div className={styles.studentInfo}>
             <Tag>{`${today.day}, ${today.date} ${today.month}`}</Tag>
             <h3>{currentStudent?.name}</h3>
             <p>{currentStudent?.rollID}</p>
+            {currentStudentAtteandanceStatus() && (
+              <Tag
+                style={{ marginTop: "0.5rem" }}
+                color={
+                  currentStudentAtteandanceStatus() === "Absent"
+                    ? "red"
+                    : currentStudentAtteandanceStatus() === "Present"
+                    ? "green"
+                    : ""
+                }
+              >
+                {currentStudentAtteandanceStatus()}
+              </Tag>
+            )}
           </div>
           <div className={styles.flexRow}>
             <Button
@@ -145,7 +170,7 @@ const AddNewAttendance: React.FC<{
             Present
           </Button>
         </div>
-      </Card>
+      </div>
     </section>
   );
 };
