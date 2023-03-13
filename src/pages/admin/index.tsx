@@ -9,6 +9,7 @@ import { Layout, Menu, theme } from "antd";
 import AddStudents from "./addStudents";
 import AddSubjects from "./addSubjects";
 import Subjects from "./Subjects";
+import Students from "./Students";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -83,7 +84,7 @@ const App: React.FC = () => {
             }}
           >
             {faculty}
-            {students && <AddStudents />}
+            {students && <Students />}
             {subjects && <Subjects />}
           </div>
         </Content>

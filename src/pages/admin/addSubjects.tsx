@@ -8,7 +8,7 @@ const AddSubjects: React.FC<{
 }> = ({ isModalOpen, handleOk, handleCancel }) => {
   return (
     <Modal
-      title="Basic Modal"
+      title="Add Subject"
       open={isModalOpen}
       onOk={handleOk}
       onCancel={handleCancel}
