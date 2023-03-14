@@ -64,7 +64,7 @@ for (let i = 0; i < 100; i++) {
 const Students: React.FC = () => {
   const [addSubjectModel, setAddSubjectModel] = useState(false);
   return (
-    <Layout className={styles.main}>
+    <div className={styles.main}>
       <div className={styles.flexRow}>
         <h3>Students</h3>
         <div className={styles.actionBtns}>
@@ -103,7 +103,7 @@ const Students: React.FC = () => {
           setAddSubjectModel(false);
         }}
       />
-    </Layout>
+    </div>
   );
 };
 
