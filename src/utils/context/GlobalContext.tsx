@@ -5,8 +5,9 @@ import {
   useEffect,
   useState,
 } from "react";
-import { studentServices } from "../api/services";
+import { studentServices, constantsServices } from "../api/services";
 import {
+  IBranch,
   ICurrentClassInfo,
   IStudent,
   IStudentAttendance,
@@ -20,6 +21,7 @@ interface IGlobalContext {
   subjects: Array<ISubject>;
   currentSubject: ISubject | null;
   currentClassInfo: ICurrentClassInfo;
+  branches: Array<IBranch>;
 }
 
 const GlobalContext = createContext<IGlobalContext>({} as IGlobalContext);
@@ -44,6 +46,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     sem: 4,
     subjectCode: "CER4C3",
   });
+  const [branches, setBranches] = useState<Array<IBranch>>([]);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -65,7 +68,15 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         }))
       );
     };
+
+    async function getBranches() {
+      const { data } = await constantsServices.getAllBranches();
+      console.log({ data });
+      setBranches(data.data);
+    }
+
     fetchStudents();
+    getBranches();
   }, [
     currentClassInfo.branch,
     currentClassInfo.year,
@@ -81,6 +92,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         subjects,
         currentSubject,
         currentClassInfo,
+        branches,
       }}
     >
       {children}

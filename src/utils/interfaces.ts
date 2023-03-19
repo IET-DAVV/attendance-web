@@ -38,3 +38,12 @@ export interface ICurrentClassInfo {
   sem: number;
   subjectCode: string;
 }
+
+export interface IBranch {
+  branchID: string;
+  branchName: string;
+  course: string;
+  subjects: {
+    [key: string]: ISubject;
+  };
+}

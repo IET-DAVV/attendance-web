@@ -28,7 +28,7 @@ type RequestData = {
 
 async function getAllBranches() {
   const collectionRef = collection(database, "constants");
-  const docRef = doc(collectionRef, "branches");
+  const docRef = doc(collectionRef, "globals");
   const docSnap = await getDoc(docRef);
   return docSnap.data()?.branches;
 }

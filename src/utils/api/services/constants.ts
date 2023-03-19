@@ -4,8 +4,13 @@ async function addNewBranchMultiple(data: any) {
   return await API.post("/constants/add-branch", data);
 }
 
-const studentServices = {
+async function getAllBranches() {
+  return await API.get("/constants/branches");
+}
+
+const constantsServices = {
   addNewBranchMultiple,
+  getAllBranches,
 };
 
-export default studentServices;
+export default constantsServices;
