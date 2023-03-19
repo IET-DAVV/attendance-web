@@ -1,11 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input, Layout, Modal, Select, Space } from "antd";
 
 const AddSubjects: React.FC<{
   isModalOpen: boolean;
   handleOk: () => void;
   handleCancel: () => void;
-}> = ({ isModalOpen, handleOk, handleCancel }) => {
+  setSemester: Function;
+  setSubjectCode: Function;
+  setSubjectName: Function;
+}> = ({
+  isModalOpen,
+  handleOk,
+  handleCancel,
+  setSemester,
+  setSubjectCode,
+  setSubjectName,
+}) => {
   return (
     <Modal
       title="Add Subject"
@@ -14,8 +24,20 @@ const AddSubjects: React.FC<{
       onCancel={handleCancel}
     >
       <Space direction="vertical">
-        <Input addonBefore="Subject Code" placeholder="Enter subject code" />
-        <Input addonBefore="Subject Name" placeholder="Enter subject name" />
+        <Input
+          addonBefore="Subject Code"
+          placeholder="Enter subject code"
+          onChange={(data) => {
+            setSubjectCode(data.target.value);
+          }}
+        />
+        <Input
+          addonBefore="Subject Name"
+          placeholder="Enter subject name"
+          onChange={(data) => {
+            setSubjectName(data.target.value);
+          }}
+        />
         <>
           <div style={{ display: "flex", flexDirection: "row" }}>
             <h4
@@ -47,6 +69,9 @@ const AddSubjects: React.FC<{
                 { value: "7", label: "7" },
                 { value: "8", label: "8" },
               ]}
+              onChange={(data) => {
+                setSemester(data);
+              }}
             />
           </div>
         </>

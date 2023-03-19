@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Layout, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import styles from "../../styles/main.module.scss";
@@ -40,6 +40,11 @@ for (let i = 0; i < 100; i++) {
 
 const Subjects: React.FC = () => {
   const [addSubjectModel, setAddSubjectModel] = useState(false);
+
+  const [semester, setSemester] = useState(null);
+  const [subjectCode, setSubjectCode] = useState("");
+  const [subjectName, setSubjectName] = useState("");
+
   return (
     <div className={styles.main}>
       <div className={styles.flexRow}>
@@ -74,11 +79,17 @@ const Subjects: React.FC = () => {
       <AddSubjects
         isModalOpen={addSubjectModel}
         handleOk={() => {
+          console.log("Semester : ", semester);
+          console.log("Subject Code : ", subjectCode);
+          console.log("Subject Name : ", subjectName);
           setAddSubjectModel(false);
         }}
         handleCancel={() => {
           setAddSubjectModel(false);
         }}
+        setSemester={setSemester}
+        setSubjectCode={setSubjectCode}
+        setSubjectName={setSubjectName}
       />
     </div>
   );

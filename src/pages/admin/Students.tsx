@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Layout, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import styles from "../../styles/main.module.scss";
@@ -63,6 +63,15 @@ for (let i = 0; i < 100; i++) {
 
 const Students: React.FC = () => {
   const [addSubjectModel, setAddSubjectModel] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [enrollmentID, setEnrollmentID] = useState("");
+  const [enrollmentYear, setEnrollmentYear] = useState(null);
+  const [name, setName] = useState("");
+  const [rollID, setRollID] = useState("");
+  const [branch, setBranch] = useState("");
+  const [section, setSection] = useState("");
+
   return (
     <div className={styles.main}>
       <div className={styles.flexRow}>
@@ -97,11 +106,25 @@ const Students: React.FC = () => {
       <AddStudents
         isModalOpen={addSubjectModel}
         handleOk={() => {
+          console.log("Email : ", email);
+          console.log("EnrollmentID : ", enrollmentID);
+          console.log("EnrollmentYear : ", enrollmentYear);
+          console.log("Name : ", name);
+          console.log("RollID : ", rollID);
+          console.log("Branch : ", branch);
+          console.log("Section : ", section);
           setAddSubjectModel(false);
         }}
         handleCancel={() => {
           setAddSubjectModel(false);
         }}
+        setEmail={setEmail}
+        setEnrollmentID={setEnrollmentID}
+        setEnrollmentYear={setEnrollmentYear}
+        setName={setName}
+        setRollID={setRollID}
+        setBranch={setBranch}
+        setSection={setSection}
       />
     </div>
   );

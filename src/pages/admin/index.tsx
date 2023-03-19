@@ -95,9 +95,4 @@ const App: React.FC = () => {
 
 export default App;
 
-//semester drop down
-//Name me space dena
 //flex direction column(label and input)
-
-//display table of existing subjects and add new subject button to add new
-//opens model on clicking
