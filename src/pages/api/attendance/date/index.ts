@@ -29,12 +29,13 @@ type Data = {
 };
 
 async function getStudentAttendanceUsingSubjectCode(
-  year: string,
+  academicYear: string,
   attendanceDate: number,
   studentId: string,
-  subjectCode: string
+  subjectCode: string,
+  classId: string
 ) {
-  if (!year)
+  if (!academicYear)
     return {
       status: "error",
       message: "Invalid date",
@@ -43,12 +44,12 @@ async function getStudentAttendanceUsingSubjectCode(
   const collectionRef = collection(
     database,
     "attendance",
-    year as string,
+    academicYear,
     "subjects",
     subjectCode,
-    "dates"
+    "classes"
   );
-  const docRef = doc(collectionRef, attendanceDate.toString());
+  const docRef = doc(collectionRef, classId);
   const snapshot = await getDoc(docRef);
 
   if (!snapshot.exists()) {
@@ -72,15 +73,16 @@ async function getStudentAttendanceUsingSubjectCode(
 }
 
 async function getStudentAttendanceOnDate(
+  academicYear: string,
   attendanceDate: number,
   studentId: string,
+  classId: string,
   subjectCode?: string
 ) {
-  const year = getYear(attendanceDate);
-  if (!year)
+  if (!academicYear)
     return {
       status: "error",
-      message: "Invalid date",
+      message: "Invalid Academic Year",
       data: {
         presentInSubjects: [],
         absentInSubjects: [],
@@ -90,8 +92,8 @@ async function getStudentAttendanceOnDate(
     };
   if (!subjectCode) {
     const q = query(
-      collectionGroup(database, "dates"),
-      where("attendanceDate", "==", attendanceDate)
+      collectionGroup(database, "classes"),
+      where("classId", "==", classId)
     );
 
     const querySnapshot = await getDocs(q);
@@ -109,12 +111,31 @@ async function getStudentAttendanceOnDate(
         },
       };
 
-    const presentInSubjects = data
+    const dateObjects = data.map((d) => ({
+      ...d.dates,
+      subjectCode: d.subjectCode,
+    }));
+
+    let presentInSubjects = data
       .filter((d) => d.presentStudentsList.includes(studentId))
       .map((d) => d.subjectCode);
-    const absentInSubjects = data
+    let absentInSubjects = data
       .filter((d) => d.absentStudentsList.includes(studentId))
       .map((d) => d.subjectCode);
+
+    dateObjects?.forEach((dateObject) => {
+      if (dateObject[attendanceDate]) {
+        if (
+          dateObject[attendanceDate].presentStudentsList.includes(studentId)
+        ) {
+          presentInSubjects.push(dateObject.subjectCode);
+        } else if (
+          dateObject[attendanceDate].absentStudentsList.includes(studentId)
+        ) {
+          absentInSubjects.push(dateObject.subjectCode);
+        }
+      }
+    });
 
     return {
       status: "success",
@@ -128,10 +149,11 @@ async function getStudentAttendanceOnDate(
   }
 
   const withSubjectCode = await getStudentAttendanceUsingSubjectCode(
-    year as string,
+    academicYear,
     attendanceDate,
     studentId,
-    subjectCode
+    subjectCode,
+    classId
   );
   return {
     ...withSubjectCode,
@@ -154,12 +176,15 @@ export default async function handler(
     if (req.method !== "GET") {
       res.status(405).json({ status: "error", error: "Method not allowed" });
     }
-    const { attendanceDate, subjectCode, studentId } = req.query;
+    const { academicYear, attendanceDate, subjectCode, studentId, classId } =
+      req.query;
 
     const { status, data, message } = await getStudentAttendanceOnDate(
+      academicYear as string,
       Number(attendanceDate),
       studentId as string,
-      subjectCode as string
+      subjectCode as string,
+      classId as string
     );
     let responseStatus = status as "success" | "error";
     res.status(200).json({ status: responseStatus, data, message });

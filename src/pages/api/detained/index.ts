@@ -17,13 +17,25 @@ type Data = {
 };
 
 type RequestData = {
-  year: string; // 2023
+  academicYear: string; // 2023
   subjectCode: string; // CER4C2
+  classId: string;
 };
 
-async function getDetained(year: string, subjectCode: string) {
-  const collectionRef = collection(database, "attendance", year, "subjects");
-  const docRef = doc(collectionRef, subjectCode);
+async function getDetained(
+  academicYear: string,
+  subjectCode: string,
+  classId: string
+) {
+  const collectionRef = collection(
+    database,
+    "attendance",
+    academicYear,
+    "subjects",
+    subjectCode,
+    "classes"
+  );
+  const docRef = doc(collectionRef, classId);
   const snapshot = await getDoc(docRef);
 
   if (!snapshot.exists()) {
@@ -43,11 +55,19 @@ async function getDetained(year: string, subjectCode: string) {
 async function markAsDetained(
   year: string,
   subjectCode: string,
+  classId: string,
   exam: string,
   studentId: string
 ) {
-  const collectionRef = collection(database, "attendance", year, "subjects");
-  const docRef = doc(collectionRef, subjectCode);
+  const collectionRef = collection(
+    database,
+    "attendance",
+    year,
+    "subjects",
+    subjectCode,
+    "classes"
+  );
+  const docRef = doc(collectionRef, classId);
   const snapshot = await getDoc(docRef);
 
   let allDetained: {
@@ -82,15 +102,17 @@ export default async function handler(
   try {
     switch (req.method) {
       case "GET": {
-        const { year, subjectCode } = req.query as RequestData;
-        const detained = await getDetained(year, subjectCode);
+        const { academicYear, subjectCode, classId } = req.query as RequestData;
+        const detained = await getDetained(academicYear, subjectCode, classId);
         return res.status(200).json({ data: detained, status: "success" });
       }
       case "POST": {
-        const { year, subjectCode, exam, studentId } = req.body;
+        const { academicYear, subjectCode, exam, studentId, classId } =
+          req.body;
         const isMarked = await markAsDetained(
-          year,
+          academicYear,
           subjectCode,
+          classId,
           exam,
           studentId
         );

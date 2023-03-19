@@ -8,6 +8,7 @@ import {
   getDocs,
   where,
   setDoc,
+  collectionGroup,
 } from "firebase/firestore";
 import {
   formatFirebaseDateDDMMYYYY,
@@ -35,11 +36,27 @@ type RequestData = {
   status?: "present" | "absent";
 };
 
-async function createParentDocumentBase(year: string, subjectCode: string) {
-  const collectionRef = collection(database, "attendance", year, "subjects");
-  const docRef = doc(collectionRef, subjectCode);
-  await setDoc(docRef, {
+// /attendance/2022_2023/subjects/CER4C3/classes/2021_CS_A/dates/65432165404
+async function createParentDocumentBase(
+  academicYear: string,
+  subjectCode: string,
+  classID: string
+) {
+  const academicYearCollRef = collection(database, "attendance");
+  const academicYearDocRef = doc(academicYearCollRef, academicYear);
+  await setDoc(academicYearDocRef, {
+    academicYear,
+  });
+  const subjectsCollRef = collection(academicYearDocRef, "subjects");
+  const subjectsDocRef = doc(subjectsCollRef, subjectCode);
+  await setDoc(subjectsDocRef, {
     subjectCode,
+  });
+  const classesCollRef = collection(subjectsDocRef, "classes");
+  const classesDocRef = doc(classesCollRef, classID);
+  await setDoc(classesDocRef, {
+    classID,
+    dates: {},
     detained: {
       mst1: [],
       mst2: [],
@@ -49,67 +66,98 @@ async function createParentDocumentBase(year: string, subjectCode: string) {
   });
 }
 
+// /attendance/2022_2023/subjects/CER4C3/classes/2021_CS_A
 export async function checkAndCreateParentDocument(
-  year: string,
-  subjectCode: string
+  academicYear: string,
+  subjectCode: string,
+  classID: string
 ) {
   const collectionRef = collection(
     database,
     "attendance",
-    year.toString(),
+    academicYear,
     "subjects"
   );
   const docRef = doc(collectionRef, subjectCode);
   const snapshot = await getDoc(docRef);
 
   if (!snapshot.exists()) {
-    await createParentDocumentBase(year, subjectCode);
+    await createParentDocumentBase(academicYear, subjectCode, classID);
   }
 }
 
 async function getStudentAttendanceByMonth(
-  year: string,
+  academicYear: string,
   subjectCode: string,
   studentId: string,
+  classID: string,
   month: number
 ) {
+  // /attendance/2022_2023/subjects/CER4C3/classes/2021_CS_A/dates
   const collectionRef = collection(
     database,
     "attendance",
-    year.toString(),
+    academicYear,
     "subjects",
     subjectCode,
-    "dates"
+    "classes"
   );
-  const monthStart = new Date(Number(year), month, 1);
-  const monthEnd = new Date(Number(year), month + 1, 1);
+  const year = new Date().getFullYear();
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 1);
 
-  await checkAndCreateParentDocument(year, subjectCode);
+  // await checkAndCreateParentDocument(year, subjectCode, );
 
-  const q = query(
-    collectionRef,
-    where("attendanceDate", ">=", monthStart.getTime()),
-    where("attendanceDate", "<", monthEnd.getTime())
-  );
-  const querySnapshot = await getDocs(q);
-  const data = querySnapshot.docs.map((doc) => doc.data());
-  if (!data.length) {
+  const docRef = doc(collectionRef, classID);
+  const snapshot = await getDoc(docRef);
+  if (!snapshot.exists()) {
     return {
+      status: "error",
       data: {
         subjectCode,
         studentId,
         month,
       },
-      status: "error",
       message: "No attendance data found for this month",
     };
   }
-  const presentOnDates = data
-    .filter((d) => d.presentStudentsList?.includes(studentId))
-    .map((d) => formDateDDMMYYYY(Number(d.attendanceDate)));
-  const absentOnDates = data
-    .filter((d) => d.absentStudentsList?.includes(studentId))
-    .map((d) => formDateDDMMYYYY(Number(d.attendanceDate)));
+
+  const data = snapshot.data() as {
+    classID: string;
+    detained: {
+      mst1: string[];
+      mst2: string[];
+      mst3: string[];
+      endSem: string[];
+    };
+    dates: {
+      [key: string]: Data;
+    };
+  };
+
+  const dates = Object.keys(data.dates);
+  const presentOnDates = dates
+    .filter((d) => {
+      const date = new Date(Number(d));
+      return (
+        date >= monthStart &&
+        date < monthEnd &&
+        data.dates[d].presentStudentsList?.includes(studentId)
+      );
+    })
+    ?.map((d) => formDateDDMMYYYY(d));
+
+  const absentOnDates = dates
+    .filter((d) => {
+      const date = new Date(Number(d));
+      return (
+        date >= monthStart &&
+        date < monthEnd &&
+        data.dates[d].absentStudentsList?.includes(studentId)
+      );
+    })
+    ?.map((d) => formDateDDMMYYYY(d));
+
   const presentCount = presentOnDates.length;
   const absentCount = absentOnDates.length;
   const totalAttendanceCount = presentCount + absentCount;
@@ -136,12 +184,13 @@ export default async function handler(
     if (req.method !== "GET") {
       res.status(405).json({ status: "error", error: "Method not allowed" });
     }
-    const { year, subjectCode, studentId, month } = req.query;
+    const { year, subjectCode, studentId, month, classID } = req.query;
 
     const { data, status, message } = await getStudentAttendanceByMonth(
       year as string,
       subjectCode as string,
       studentId as string,
+      classID as string,
       Number(month)
     );
     if (status === "error") {

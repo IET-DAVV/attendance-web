@@ -115,30 +115,37 @@ function addingStudents(newArray: Array<any>) {
   newArray.forEach((item: any) => {
     const branchID: any = getBranch(item.roll_no);
     const enrollmentYear = parseInt("20" + item.roll_no?.slice(0, 2));
-    const section = item.roll_no.slice(4)[0] === "0" ? "A" : "B";
-    if (!branches[branchID]) {
-      branches[branchID] = {
+    let section = "NA";
+    let docId = `${enrollmentYear}_${branchID}`;
+    if (["CS", "IT", "ETC"].includes(branchID)) {
+      section = item.roll_no.slice(4)[0] === "0" ? "A" : "B";
+    }
+    let keyId = `${enrollmentYear}_${branchID}`;
+    if (["A", "B"].includes(section)) {
+      keyId += `_${section}`;
+      docId += `_${section}`;
+    }
+
+    if (!branches[docId]) {
+      branches[docId] = {
         branchID,
         enrollmentYear,
+        section,
         students: {
           [item.enroll_no]: {
             rollID: item.roll_no,
             name: item.name,
             email: generateEmail(item.roll_no),
-            enrollmentYear,
             enrollmentID: item.enroll_no,
-            section,
           },
         },
       };
     } else {
-      branches[branchID].students[item.enroll_no] = {
+      branches[docId].students[item.enroll_no] = {
         rollID: item.roll_no,
         name: item.name,
         email: generateEmail(item.roll_no),
-        enrollmentYear,
         enrollmentID: item.enroll_no,
-        section,
       };
     }
   });

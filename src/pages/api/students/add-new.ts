@@ -38,13 +38,14 @@ type RequestData = {
 async function createStudentMultiple(data: Array<any>) {
   const collectionRef = collection(database, "students");
   const batch = writeBatch(database);
-  data.forEach((brancDoc) => {
-    const documentRef = doc(
-      collectionRef,
-      `${brancDoc.enrollmentYear}_${brancDoc.branchID}`
-    );
+  data.forEach((branchDoc) => {
+    let docId = `${branchDoc.enrollmentYear}_${branchDoc.branchID}`;
+    if (branchDoc.section) {
+      docId = `${docId}_${branchDoc.section}`;
+    }
+    const documentRef = doc(collectionRef, docId);
     batch.set(documentRef, {
-      ...brancDoc,
+      ...branchDoc,
     });
   });
   await batch.commit();

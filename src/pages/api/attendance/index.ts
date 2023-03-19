@@ -25,61 +25,75 @@ type Data = {
 };
 
 type RequestData = {
+  academicYear: string;
   subjectCode: string; // CER4C2
+  classId: string;
   attendanceDate: number; // 19_02_2023 (DD_MM_YYYY)
   studentId?: string; // DE19XXX
   studentIds?: string[]; // [DE191XX, DE192XX]
   status?: "present" | "absent";
 };
 
-async function getAttendance(attendanceDate: number, subjectCode: string) {
-  const year = getYear(attendanceDate) as string;
+// /attendance/2022_2023/subjects/CER4C3/classes/2021_CS_A.dates.65432165404
+async function getAttendance(
+  academicYear: string,
+  attendanceDate: number,
+  subjectCode: string,
+  classId: string
+) {
   const collectionRef = collection(
     database,
     "attendance",
-    year,
+    academicYear,
     "subjects",
     subjectCode,
-    "dates"
+    "classes"
   );
-  const docRef = doc(collectionRef, attendanceDate.toString());
+  const docRef = doc(collectionRef, classId);
   const snapshot = await getDoc(docRef);
 
   if (!snapshot.exists()) {
     console.log("No such document!");
     return { presentStudentsList: [], absentStudentsList: [] };
   }
-  const { presentStudentsList, absentStudentsList } = snapshot.data();
+  const attendanceData = snapshot.data().dates[attendanceDate];
+  if (!attendanceData) {
+    return { presentStudentsList: [], absentStudentsList: [] };
+  }
+  const { presentStudentsList, absentStudentsList } = attendanceData;
 
   return { presentStudentsList, absentStudentsList };
 }
 
 async function markAttendance(
+  academicYear: string,
   attendanceDate: number,
   subjectCode: string,
+  classId: string,
   studentId: string,
   status: "present" | "absent"
 ) {
-  const year = getYear(attendanceDate) as string;
-
-  await checkAndCreateParentDocument(year.toString(), subjectCode);
+  await checkAndCreateParentDocument(academicYear, subjectCode, classId);
 
   const collectionRef = collection(
     database,
     "attendance",
-    year.toString(),
+    academicYear,
     "subjects",
     subjectCode,
-    "dates"
+    "classes"
   );
-  const docRef = doc(collectionRef, attendanceDate.toString());
+  const docRef = doc(collectionRef, classId);
   await setDoc(
     docRef,
     {
       attendanceDate,
-      [status === "present" ? "presentStudentsList" : "absentStudentsList"]:
-        arrayUnion(studentId),
-      [status === "present" ? "absentStudentsList" : "presentStudentsList"]:
+      [status === "present"
+        ? `dates.${attendanceDate}.presentStudentsList`
+        : `dates.${attendanceDate}.absentStudentsList`]: arrayUnion(studentId),
+      [status === "present"
+        ? `dates.${attendanceDate}.absentStudentsList`
+        : `dates.${attendanceDate}.presentStudentsList`]:
         arrayRemove(studentId),
     },
     { merge: true }
@@ -87,33 +101,39 @@ async function markAttendance(
 }
 
 async function markAttendanceMultiple(
+  academicYear: string,
   attendanceDate: number,
   subjectCode: string,
+  classId: string,
   studentIds: string[],
   status: "present" | "absent"
 ) {
-  const year = getYear(attendanceDate);
-
-  await checkAndCreateParentDocument(year?.toString() as string, subjectCode);
+  await checkAndCreateParentDocument(academicYear, subjectCode, classId);
 
   const collectionRef = collection(
     database,
     "attendance",
-    year?.toString() as string,
+    academicYear,
     "subjects",
     subjectCode,
-    "dates"
+    "classes"
   );
   // check if parent document exists
 
-  const docRef = doc(collectionRef, attendanceDate.toString());
+  const docRef = doc(collectionRef, classId);
   await setDoc(
     docRef,
     {
-      [status === "present" ? "presentStudentsList" : "absentStudentsList"]:
-        arrayUnion(...studentIds),
-      [status === "present" ? "absentStudentsList" : "presentStudentsList"]:
-        arrayRemove(...studentIds),
+      [status === "present"
+        ? `dates.${attendanceDate}.presentStudentsList`
+        : `dates.${attendanceDate}.absentStudentsList`]: arrayUnion(
+        ...studentIds
+      ),
+      [status === "present"
+        ? `dates.${attendanceDate}.absentStudentsList`
+        : `dates.${attendanceDate}.presentStudentsList`]: arrayRemove(
+        ...studentIds
+      ),
       attendanceDate,
     },
     { merge: true }
@@ -126,11 +146,13 @@ export default async function handler(
 ) {
   try {
     if (req.method === "GET") {
-      const { subjectCode, attendanceDate } =
+      const { academicYear, subjectCode, attendanceDate, classId } =
         req.query as unknown as RequestData;
       const { presentStudentsList, absentStudentsList } = await getAttendance(
+        academicYear,
         Number(attendanceDate),
-        subjectCode
+        subjectCode,
+        classId
       );
       res.status(200).json({
         status: "success",
@@ -138,19 +160,30 @@ export default async function handler(
       });
     }
     if (req.method === "POST") {
-      const { subjectCode, studentId, studentIds, status, attendanceDate } =
-        req.body as RequestData;
+      const {
+        academicYear,
+        subjectCode,
+        studentId,
+        studentIds,
+        status,
+        attendanceDate,
+        classId,
+      } = req.body as RequestData;
       if (studentId) {
         await markAttendance(
+          academicYear,
           Number(attendanceDate),
           subjectCode,
+          classId,
           studentId,
           status as any
         );
       } else if (studentIds) {
         await markAttendanceMultiple(
+          academicYear,
           Number(attendanceDate),
           subjectCode,
+          classId,
           studentIds,
           status as any
         );
