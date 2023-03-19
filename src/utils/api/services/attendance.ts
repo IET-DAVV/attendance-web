@@ -1,19 +1,19 @@
 import API from "../config";
 
-async function getDetainedStudents(year: number | number, subjectCode: string) {
+async function getDetainedStudents(academicYear: string, subjectCode: string) {
   return await API.get("/detained", {
-    params: { year, subjectCode },
+    params: { academicYear, subjectCode },
   });
 }
 
 async function detainStudentFromExam(
-  year: number,
+  academicYear: string,
   subjectCode: string,
   exam: string,
   studentId: string
 ) {
   return await API.post("/detained", {
-    year,
+    academicYear,
     subjectCode,
     exam,
     studentId,
@@ -21,15 +21,17 @@ async function detainStudentFromExam(
 }
 
 async function getAttendanceBySubjectAndDate(
+  academicYear: string,
   subjectCode: string,
   attendanceDate: string
 ) {
   return await API.get("/attendance", {
-    params: { subjectCode, attendanceDate },
+    params: { subjectCode, attendanceDate, academicYear },
   });
 }
 
 async function markStudentAttendance(
+  academicYear: string,
   subjectCode: string,
   attendanceDate: string,
   studentId: string,
@@ -40,10 +42,12 @@ async function markStudentAttendance(
     attendanceDate,
     studentId,
     status,
+    academicYear,
   });
 }
 
 async function markStudentAttendanceMultiple(
+  academicYear: string,
   subjectCode: string,
   attendanceDate: string,
   studentIds: string[],
@@ -54,59 +58,66 @@ async function markStudentAttendanceMultiple(
     attendanceDate,
     studentIds,
     status,
+    academicYear,
   });
 }
 
 async function getStudentAttendanceByMonth(
-  year: number,
+  academicYear: string,
   subjectCode: string,
   studentId: string,
   month: number
 ) {
   return await API.get("/attendance/student", {
-    params: { year, subjectCode, studentId, month },
+    params: { academicYear, subjectCode, studentId, month },
   });
 }
 
 async function getStudentAttendanceOnDate(
+  academicYear: string,
   attendanceDate: string,
   studentId: string,
   subjectCode?: string
 ) {
   return await API.get("/attendance/date", {
-    params: { attendanceDate, studentId, subjectCode },
+    params: { attendanceDate, studentId, subjectCode, academicYear },
   });
 }
 
-async function getStudentDetainedInSubjects(year: number, studentId: string) {
+async function getStudentDetainedInSubjects(
+  academicYear: string,
+  studentId: string
+) {
   return await API.get("/detained/student", {
-    params: { year, studentId },
+    params: { academicYear, studentId },
   });
 }
 
 async function getIsStudentDetainedInSubject(
-  year: number,
+  academicYear: string,
   subjectCode: string,
   exam: string,
   studentId: string
 ) {
   return await API.get("/detained/student", {
-    params: { year, subjectCode, exam, studentId },
+    params: { academicYear, subjectCode, exam, studentId },
   });
 }
 
 async function getStudentsAttendanceInDateRange(
+  academicYear: string,
   dateRange: {
     startDate: number;
     endDate: number;
   },
   subjectCode: string,
+  classId: string,
   studentId?: string
 ) {
   if (!dateRange.startDate || !dateRange.endDate)
     throw new Error("Invalid date range");
   return await API.get("/attendance/date/range", {
-    params: { ...dateRange, subjectCode, studentId },
+    params: { academicYear, ...dateRange, subjectCode, studentId, classId },
   });
 }
 

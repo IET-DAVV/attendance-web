@@ -60,7 +60,16 @@ async function getStudentAttendanceUsingSubjectCode(
       data: { attendanceStatus: null },
     };
   }
-  const { presentStudentsList } = snapshot.data();
+
+  if (!snapshot.data().dates[attendanceDate]) {
+    return {
+      status: "error",
+      message: "No data found",
+      data: { attendanceStatus: null },
+    };
+  }
+
+  const { presentStudentsList } = snapshot.data().dates[attendanceDate];
 
   return {
     status: "success",
@@ -178,6 +187,11 @@ export default async function handler(
     }
     const { academicYear, attendanceDate, subjectCode, studentId, classId } =
       req.query;
+
+    if (!academicYear || !attendanceDate || !studentId || !classId) {
+      console.log("INVALID_DATA", req.query);
+      res.status(400).json({ status: "error", error: "Invalid data" });
+    }
 
     const { status, data, message } = await getStudentAttendanceOnDate(
       academicYear as string,

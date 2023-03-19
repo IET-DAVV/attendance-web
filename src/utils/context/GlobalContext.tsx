@@ -40,16 +40,17 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   const [currentClassInfo, setCurrentClassInfo] = useState<ICurrentClassInfo>({
     year: 2021,
     branch: "CS",
-    section: "B",
+    section: "A",
     sem: 4,
-    subjectCode: "CER4C1",
+    subjectCode: "CER4C3",
   });
 
   useEffect(() => {
     const fetchStudents = async () => {
       const { data } = await studentServices.getAllStudentsByYearAndBranch(
         currentClassInfo.year,
-        currentClassInfo.branch
+        currentClassInfo.branch,
+        currentClassInfo.section
       );
       setStudents(
         data.data?.map((student: any) => ({
@@ -65,7 +66,11 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
       );
     };
     fetchStudents();
-  }, [currentClassInfo.branch, currentClassInfo.year]);
+  }, [
+    currentClassInfo.branch,
+    currentClassInfo.year,
+    currentClassInfo.section,
+  ]);
 
   return (
     <GlobalContext.Provider

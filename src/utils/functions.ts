@@ -65,3 +65,14 @@ export function getDateDayMonthYear(date: Date | string | number) {
     year: tempDate.getFullYear(),
   };
 }
+
+export function isBetweenDateRange(
+  date: Date | string | number,
+  startDate: Date | string | number,
+  endDate: Date | string | number
+) {
+  const tempDate = new Date(date);
+  const tempStartDate = new Date(startDate);
+  const tempEndDate = new Date(endDate);
+  return tempDate >= tempStartDate && tempDate <= tempEndDate;
+}

@@ -31,12 +31,20 @@ type Data = {
 
 type RequestData = {
   year?: string; // 2023
-  branch?: string; // 2023
+  branch?: string; // CS
+  section?: string; // A | B
 };
 
-async function getAllStudentsByYearAndBranch(year: number, branch: string) {
+async function getAllStudentsByYearAndBranch(
+  year: number,
+  branch: string,
+  section?: string
+) {
   const collectionRef = collection(database, "students");
-  const documentRef = doc(collectionRef, `${year}_${branch}`);
+  let docId = `${year}_${branch}`;
+  if (section) docId += `_${section}`;
+  console.log("docId", docId);
+  const documentRef = doc(collectionRef, docId);
   const snapshot = await getDoc(documentRef);
   const studentsData = snapshot.data();
   if (!studentsData) return [];
@@ -67,7 +75,7 @@ export default async function handler(
   try {
     switch (req.method) {
       case "GET": {
-        const { year, branch } = req.query as unknown as RequestData;
+        const { year, branch, section } = req.query as unknown as RequestData;
         if (!branch && !year)
           return res.status(400).json({
             status: "error",
@@ -82,7 +90,8 @@ export default async function handler(
         }
         const students = await getAllStudentsByYearAndBranch(
           Number(year),
-          branch as string
+          branch as string,
+          section as string
         );
         return res.status(200).json({
           data: students as Data[],

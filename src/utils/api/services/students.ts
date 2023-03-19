@@ -4,8 +4,14 @@ async function getAllStudentsByYear(year: number) {
   return await API.get("/students", { params: { year } });
 }
 
-async function getAllStudentsByYearAndBranch(year: number, branch: string) {
-  return await API.get("/students/branch", { params: { year, branch } });
+async function getAllStudentsByYearAndBranch(
+  year: number,
+  branch: string,
+  section?: string
+) {
+  return await API.get("/students/branch", {
+    params: { year, branch, section },
+  });
 }
 
 async function addNewStudentsMultiple(data: any) {

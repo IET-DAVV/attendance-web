@@ -57,6 +57,8 @@ const actionMenuItems = [
   },
 ];
 
+const academicYear = "2021-2022";
+const classId = "2021_CS_A";
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
@@ -81,11 +83,13 @@ export default function Home() {
   const getCurrentDateRangeAttendance = useCallback(async () => {
     setLoading(true);
     const { data } = await attendanceServices.getStudentsAttendanceInDateRange(
+      academicYear,
       {
         startDate: currentDateRange[0].toDate().getTime(),
         endDate: currentDateRange[1].toDate().getTime(),
       },
-      currentClassInfo.subjectCode
+      currentClassInfo.subjectCode,
+      classId
     );
     setCurrentWeekAttendance(data.data);
     setLoading(false);
@@ -110,12 +114,14 @@ export default function Home() {
       (student: any) => (student.attendance[todayTime] = "Present")
     );
     await attendanceServices.markStudentAttendanceMultiple(
+      academicYear,
       currentClassInfo.subjectCode,
       todayTime,
       absentStudents?.map((student: any) => student.enrollmentID),
       "absent"
     );
     await attendanceServices.markStudentAttendanceMultiple(
+      academicYear,
       currentClassInfo.subjectCode,
       todayTime,
       presentStudents?.map((student: any) => student.enrollmentID),
