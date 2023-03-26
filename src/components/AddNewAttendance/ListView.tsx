@@ -112,6 +112,9 @@ const ListView: React.FC<Props> = ({
       scroll={{
         y: "calc(100vh - 380px)",
       }}
+      pagination={{
+        defaultPageSize: 20,
+      }}
     />
   );
 };

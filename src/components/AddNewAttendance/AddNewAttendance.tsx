@@ -48,22 +48,22 @@ const AddNewAttendance: React.FC<{
   }
 
   function handleClickAbsent(student?: IStudentAttendance) {
-    if (!student) {
+    if (!student?.rollID) {
       setCurrentStudentIndex(getNewIndex("next"));
     }
     setStudentsAttendance((prev) => {
-      const newStudentsAttendance: any = [...prev];
+      let newStudentsAttendance: any = [...prev];
       let absoluteTime = getToday12AMDatetime();
-      let newCurentStudentIndex = currentStudentIndex;
-      if (student) {
-        newCurentStudentIndex = newStudentsAttendance.findIndex(
+      let newCurrentStudentIndex = currentStudentIndex;
+      if (student?.rollID) {
+        newCurrentStudentIndex = newStudentsAttendance.findIndex(
           (s: IStudentAttendance) => s.rollID === student.rollID
         );
       }
-      if (!newStudentsAttendance[newCurentStudentIndex].attendance) {
-        newStudentsAttendance[newCurentStudentIndex].attendance = {};
+      if (!newStudentsAttendance[newCurrentStudentIndex]?.attendance) {
+        newStudentsAttendance[newCurrentStudentIndex].attendance = {};
       }
-      newStudentsAttendance[newCurentStudentIndex].attendance[
+      newStudentsAttendance[newCurrentStudentIndex].attendance[
         absoluteTime.toString()
       ] = "Absent";
       return newStudentsAttendance;
@@ -71,14 +71,14 @@ const AddNewAttendance: React.FC<{
   }
 
   function handleClickPresent(student?: IStudentAttendance) {
-    if (!student) {
+    if (!student?.rollID) {
       setCurrentStudentIndex(getNewIndex("next"));
     }
     setStudentsAttendance((prev) => {
       const newStudentsAttendance: any = [...prev];
       let absoluteTime = getToday12AMDatetime();
       let newCurentStudentIndex = currentStudentIndex;
-      if (student) {
+      if (student?.rollID) {
         newCurentStudentIndex = newStudentsAttendance.findIndex(
           (s: IStudentAttendance) => s.rollID === student.rollID
         );
