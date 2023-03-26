@@ -2,21 +2,29 @@ import { useGlobalContext } from "@/utils/context/GlobalContext";
 import { getDateDayMonthYear, getToday12AMDatetime } from "@/utils/functions";
 import { IStudentAttendance } from "@/utils/interfaces";
 import {
+  AppstoreOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
   CheckOutlined,
   CloseOutlined,
+  OrderedListOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Drawer, Space, Tag } from "antd";
+import { Button, Card, Checkbox, Drawer, Space, Tabs, Tag } from "antd";
+import { CheckboxChangeEvent } from "antd/es/checkbox";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import styles from "./AddNewAttendance.module.scss";
+import GridView from "./GridView";
+import ListView from "./ListView";
+import SingleView from "./SingleView";
 
 const AddNewAttendance: React.FC<{
   open: boolean;
   onClose: () => void;
 }> = ({ open, onClose }) => {
   const today = getDateDayMonthYear(new Date());
+  const [activeKey, setActiveKey] = useState<string>("1");
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number>(0);
   const [currentStudent, setCurrentStudent] =
     useState<IStudentAttendance | null>(null);
@@ -39,30 +47,46 @@ const AddNewAttendance: React.FC<{
     return newIndex;
   }
 
-  function handleClickAbsent() {
-    setCurrentStudentIndex(getNewIndex("next"));
+  function handleClickAbsent(student?: IStudentAttendance) {
+    if (!student) {
+      setCurrentStudentIndex(getNewIndex("next"));
+    }
     setStudentsAttendance((prev) => {
       const newStudentsAttendance: any = [...prev];
       let absoluteTime = getToday12AMDatetime();
-      if (!newStudentsAttendance[currentStudentIndex].attendance) {
-        newStudentsAttendance[currentStudentIndex].attendance = {};
+      let newCurentStudentIndex = currentStudentIndex;
+      if (student) {
+        newCurentStudentIndex = newStudentsAttendance.findIndex(
+          (s: IStudentAttendance) => s.rollID === student.rollID
+        );
       }
-      newStudentsAttendance[currentStudentIndex].attendance[
+      if (!newStudentsAttendance[newCurentStudentIndex].attendance) {
+        newStudentsAttendance[newCurentStudentIndex].attendance = {};
+      }
+      newStudentsAttendance[newCurentStudentIndex].attendance[
         absoluteTime.toString()
       ] = "Absent";
       return newStudentsAttendance;
     });
   }
 
-  function handleClickPresent() {
-    setCurrentStudentIndex(getNewIndex("next"));
+  function handleClickPresent(student?: IStudentAttendance) {
+    if (!student) {
+      setCurrentStudentIndex(getNewIndex("next"));
+    }
     setStudentsAttendance((prev) => {
       const newStudentsAttendance: any = [...prev];
       let absoluteTime = getToday12AMDatetime();
-      if (!newStudentsAttendance[currentStudentIndex].attendance) {
-        newStudentsAttendance[currentStudentIndex].attendance = {};
+      let newCurentStudentIndex = currentStudentIndex;
+      if (student) {
+        newCurentStudentIndex = newStudentsAttendance.findIndex(
+          (s: IStudentAttendance) => s.rollID === student.rollID
+        );
       }
-      newStudentsAttendance[currentStudentIndex].attendance[
+      if (!newStudentsAttendance[newCurentStudentIndex].attendance) {
+        newStudentsAttendance[newCurentStudentIndex].attendance = {};
+      }
+      newStudentsAttendance[newCurentStudentIndex].attendance[
         absoluteTime.toString()
       ] = "Present";
       return newStudentsAttendance;
@@ -81,97 +105,112 @@ const AddNewAttendance: React.FC<{
     setCurrentStudent(studentsAttendance[currentStudentIndex]);
   }, [currentStudentIndex, studentsAttendance]);
 
+  const tabOptions = [
+    {
+      label: (
+        <span>
+          <UserOutlined /> Single
+        </span>
+      ),
+      key: "1",
+      children: (
+        <SingleView
+          open={open}
+          onClose={onClose}
+          currentStudentAtteandanceStatus={currentStudentAtteandanceStatus}
+          handleClickNavigate={handleClickNavigate}
+          handleClickPresent={handleClickPresent}
+          handleClickAbsent={handleClickAbsent}
+          currentStudent={currentStudent}
+          currentStudentIndex={currentStudentIndex}
+          getNewIndex={getNewIndex}
+          today={today}
+        />
+      ),
+    },
+    {
+      label: (
+        <span>
+          <AppstoreOutlined />
+          Grid
+        </span>
+      ),
+
+      key: "2",
+      children: (
+        <GridView
+          currentStudentAtteandanceStatus={currentStudentAtteandanceStatus}
+          handleClickAbsent={handleClickAbsent}
+          handleClickPresent={handleClickPresent}
+          students={studentsAttendance}
+          today={today}
+        />
+      ),
+    },
+    {
+      label: (
+        <span>
+          <OrderedListOutlined />
+          List
+        </span>
+      ),
+
+      key: "3",
+      children: (
+        <ListView
+          currentStudentAtteandanceStatus={currentStudentAtteandanceStatus}
+          handleClickAbsent={handleClickAbsent}
+          handleClickPresent={handleClickPresent}
+          handleClickSelectAll={markAllAttendance}
+          students={studentsAttendance}
+          today={today}
+        />
+      ),
+    },
+  ];
+
+  function markAllAttendance(status: "Present" | "Absent") {
+    setStudentsAttendance((prev) => {
+      let absoluteTime = getToday12AMDatetime();
+      return prev.map((student: IStudentAttendance) => ({
+        ...student,
+        attendance: {
+          ...student.attendance,
+          [absoluteTime.toString()]: status,
+        },
+      }));
+    });
+  }
+
+  function handleClickSelectAll(e: CheckboxChangeEvent) {
+    markAllAttendance(e.target.checked ? "Present" : "Absent");
+  }
+
   return (
-    <section
-      className={clsx(styles.container, open ? styles.open : styles.close)}
-      onClick={onClose}
+    <Drawer
+      title={
+        "New Attendance for " + `${today.day}, ${today.date} ${today.month}`
+      }
+      placement="bottom"
+      closable={true}
+      onClose={onClose}
+      open={open}
+      key={"bottom"}
+      className={styles.container}
     >
-      <div
-        className={clsx(
-          styles.card,
-          currentStudentAtteandanceStatus() === "Absent"
-            ? styles.absent
-            : currentStudentAtteandanceStatus() === "Present"
-            ? styles.present
-            : ""
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span
-          className={clsx(
-            styles.statusIndicator,
-            currentStudentAtteandanceStatus() === "Absent"
-              ? styles.absent
-              : currentStudentAtteandanceStatus() === "Present"
-              ? styles.present
-              : ""
-          )}
-        ></span>
-        <div className={clsx(styles.flexRow, styles.studentInfoContainer)}>
-          <div className={styles.studentInfo}>
-            <Tag>{`${today.day}, ${today.date} ${today.month}`}</Tag>
-            <h3>{currentStudent?.name}</h3>
-            <p>{currentStudent?.rollID}</p>
-            {currentStudentAtteandanceStatus() && (
-              <Tag
-                style={{ marginTop: "0.5rem" }}
-                color={
-                  currentStudentAtteandanceStatus() === "Absent"
-                    ? "red"
-                    : currentStudentAtteandanceStatus() === "Present"
-                    ? "green"
-                    : ""
-                }
-              >
-                {currentStudentAtteandanceStatus()}
-              </Tag>
-            )}
-          </div>
-          <div className={styles.flexRow}>
-            <Button
-              shape="circle"
-              icon={<ArrowLeftOutlined />}
-              onClick={() => {
-                handleClickNavigate("prev");
-              }}
-            />
-            <Button
-              shape="circle"
-              icon={<ArrowRightOutlined />}
-              onClick={() => {
-                handleClickNavigate("next");
-              }}
-            />
-          </div>
-        </div>
-        <div
-          className={clsx(
-            styles.actionBtns,
-            currentStudent?.attendance?.[getToday12AMDatetime()] === "Absent"
-              ? styles.absent
-              : currentStudent?.attendance?.[getToday12AMDatetime()] ===
-                "Present"
-              ? styles.present
-              : ""
-          )}
-        >
-          <Button
-            type="default"
-            onClick={handleClickAbsent}
-            icon={<CloseOutlined />}
-          >
-            Absent
-          </Button>
-          <Button
-            type="default"
-            onClick={handleClickPresent}
-            icon={<CheckOutlined />}
-          >
-            Present
-          </Button>
-        </div>
-      </div>
-    </section>
+      <Tabs
+        className={styles.tabsContainer}
+        activeKey={activeKey}
+        onChange={(key) => setActiveKey(key)}
+        type="card"
+        items={tabOptions}
+        tabBarExtraContent={
+          activeKey === "2" && (
+            <Checkbox onChange={handleClickSelectAll}>Select All</Checkbox>
+          )
+        }
+      />
+    </Drawer>
   );
 };
 

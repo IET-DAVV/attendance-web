@@ -7,7 +7,7 @@ import { CalendarHeader } from "./CalendarHeader";
 import { GenericEvent, CalendarContainerProps } from "./types";
 import { daysToWeekObject } from "./utils";
 
-export function WeeklyCalendar<T extends GenericEvent>({
+function WeeklyCalendar<T extends GenericEvent>({
   events,
   onEventClick,
   onSelectDate,
@@ -44,3 +44,5 @@ export function WeeklyCalendar<T extends GenericEvent>({
     </Card>
   );
 }
+
+export default WeeklyCalendar;
