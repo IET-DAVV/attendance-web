@@ -3,23 +3,40 @@
 $presentColor: rgb(131, 221, 131);
 $absentColor: rgb(255, 167, 132);
 
+$tabHeight: 50px;
+
 .container {
   width: 100vw;
-  height: 100vh;
-  @extend .flexRow;
-  display: none;
-  justify-content: center;
+  // height: 100vh;
+  @extend .flexCol;
+  justify-content: flex-start;
   background-color: rgba(0, 0, 0, 0.2);
   position: fixed;
   top: 0;
   left: 0;
+  z-index: 100;
+  padding: 2rem 0;
   &.open {
     display: flex;
   }
 
+  .tabsContainer {
+    > div:nth-of-type(1) {
+      height: $tabHeight;
+      margin: 0;
+    }
+    > div:nth-of-type(2) {
+      padding: 1rem;
+      border: 1px solid rgb(231, 231, 231);
+      border-radius: 0 0 0.6rem 0.6rem;
+      background: rgba(0, 0, 0, 0.05);
+    }
+    padding-bottom: 1rem;
+  }
+
   .card {
     padding: 0 !important;
-    width: 300px;
+    width: 400px;
     height: 300px;
     @extend .flexCol;
     justify-content: start;
@@ -90,4 +107,33 @@ $absentColor: rgb(255, 167, 132);
   100% {
     opacity: 1;
   }
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  height: calc(100vh - $tabHeight - 200px);
+  overflow-y: auto;
+}
+.gridViewCard {
+  width: 100%;
+  height: 120px;
+  background: white;
+  border-radius: 0.6rem;
+  padding: 1rem;
+
+  &.absent {
+    background: $absentColor;
+  }
+
+  &.present {
+    background: $presentColor;
+  }
+}
+
+.singleViewContainer {
+  @extend .flexCol;
+  justify-content: center;
+  height: calc(100vh - $tabHeight - 200px);
 }
