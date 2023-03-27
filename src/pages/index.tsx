@@ -118,14 +118,16 @@ export default function Home() {
       currentClassInfo.subjectCode,
       todayTime,
       absentStudents?.map((student: any) => student.enrollmentID),
-      "absent"
+      "absent",
+      "classID" //provide classID here
     );
     await attendanceServices.markStudentAttendanceMultiple(
       academicYear,
       currentClassInfo.subjectCode,
       todayTime,
       presentStudents?.map((student: any) => student.enrollmentID),
-      "present"
+      "present",
+      "classID" //provide classID here
     );
   }
 

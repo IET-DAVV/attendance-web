@@ -4,6 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import styles from "../../styles/main.module.scss";
 import { PlusOutlined } from "@ant-design/icons";
 import AddStudents from "./addStudents";
+import { useGlobalContext } from "@/utils/context/GlobalContext";
 
 interface DataType {
   key: React.Key;
@@ -48,7 +49,7 @@ const columns: ColumnsType<DataType> = [
 ];
 
 const data: DataType[] = [];
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 20; i++) {
   data.push({
     key: i,
     email: `19bcs113@ietdavv.edu.in`,
@@ -71,6 +72,12 @@ const Students: React.FC = () => {
   const [rollID, setRollID] = useState("");
   const [branch, setBranch] = useState("");
   const [section, setSection] = useState("");
+
+  const { branches } = useGlobalContext();
+
+  useEffect(() => {
+    console.log("AllBranches : ", branches);
+  }, []);
 
   return (
     <div className={styles.main}>

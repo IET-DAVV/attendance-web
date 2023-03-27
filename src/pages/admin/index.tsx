@@ -10,6 +10,7 @@ import AddStudents from "./addStudents";
 import AddSubjects from "./addSubjects";
 import Subjects from "./Subjects";
 import Students from "./Students";
+import Faculties from "./Faculties";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -83,7 +84,7 @@ const App: React.FC = () => {
               background: colorBgContainer,
             }}
           >
-            {faculty}
+            {faculty && <Faculties />}
             {students && <Students />}
             {subjects && <Subjects />}
           </div>

@@ -29,7 +29,7 @@ const columns: ColumnsType<DataType> = [
 ];
 
 const data: DataType[] = [];
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 20; i++) {
   data.push({
     key: i,
     subjectname: `Paradigm`,
