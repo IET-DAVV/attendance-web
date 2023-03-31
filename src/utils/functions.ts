@@ -1,3 +1,5 @@
+import { ICurrentClassInfo, IStudentAttendance } from "./interfaces";
+
 export function formDateDDMMYYYY(date: any) {
   const tempDate = new Date(date);
   console.log(tempDate, date);
@@ -75,4 +77,26 @@ export function isBetweenDateRange(
   const tempStartDate = new Date(startDate);
   const tempEndDate = new Date(endDate);
   return tempDate >= tempStartDate && tempDate <= tempEndDate;
+}
+
+export function separateAttendance(
+  studentsAttendance: IStudentAttendance[],
+  currentClassInfo: ICurrentClassInfo
+) {
+  const absentStudents = studentsAttendance.filter(
+    (student: IStudentAttendance) =>
+      student.attendance?.[getToday12AMDatetime()] === "Absent"
+  );
+  const presentStudents = studentsAttendance.filter(
+    (student: IStudentAttendance) =>
+      student.attendance?.[getToday12AMDatetime()] === "Present"
+  );
+  const attendanceData = {
+    date: getToday12AMDatetime(),
+    absentStudents,
+    presentStudents,
+    subjectCode: currentClassInfo?.subjectCode,
+    classID: currentClassInfo?.id,
+  };
+  return attendanceData;
 }

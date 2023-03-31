@@ -32,6 +32,7 @@ export interface ISubject {
 }
 
 export interface ICurrentClassInfo {
+  id: string;
   year: number;
   branch: string;
   section: string;
