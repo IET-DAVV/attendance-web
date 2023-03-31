@@ -6,6 +6,7 @@ import {
   getDateDayMonthYear,
   getToday12AMDatetime,
   getTotalDaysCountInCurrentMonth,
+  mapAttendanceValues,
   separateAttendance,
 } from "@/utils/functions";
 import styles from "../styles/main.module.scss";
@@ -32,7 +33,7 @@ import MainLayout from "@/layouts/MainLayout/MainLayout";
 import AddNewAttendance from "@/components/AddNewAttendance/AddNewAttendance";
 import dayjs from "dayjs";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
-import { CSVDownload, CSVLink } from "react-csv";
+import { CSVLink } from "react-csv";
 import { IStudentAttendance } from "@/utils/interfaces";
 const { RangePicker } = DatePicker;
 
@@ -60,8 +61,6 @@ const actionMenuItems = [
   },
 ];
 
-const academicYear = "2021-2022";
-const classId = "2021_CS_A";
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
@@ -76,8 +75,12 @@ export default function Home() {
   ]);
 
   const [columns, setColumns] = useState([]);
-  const { studentsAttendance, setStudentsAttendance, currentClassInfo } =
-    useGlobalContext();
+  const {
+    studentsAttendance,
+    setStudentsAttendance,
+    currentClassInfo,
+    academicYear,
+  } = useGlobalContext();
 
   const csvBtnRef = useRef<
     CSVLink & HTMLAnchorElement & { link: HTMLAnchorElement }
@@ -92,12 +95,12 @@ export default function Home() {
         endDate: currentDateRange[1].toDate().getTime(),
       },
       currentClassInfo.subjectCode,
-      classId
+      currentClassInfo?.id
     );
     console.log("data", data);
     setCurrentWeekAttendance(data.data);
     setLoading(false);
-  }, [currentDateRange, currentClassInfo.subjectCode]);
+  }, [currentDateRange, currentClassInfo, academicYear]);
 
   useEffect(() => {
     if (currentDateRange.length && currentClassInfo.subjectCode) {
@@ -311,9 +314,10 @@ export default function Home() {
             }}
           />
         </div>
-        <CSVDownload
+        <CSVLink
           ref={csvBtnRef}
-          data={studentsAttendance}
+          target="_blank"
+          data={mapAttendanceValues(studentsAttendance)}
           filename={`attendance-${currentClassInfo.subjectCode}-${currentClassInfo.section}.csv`}
         />
         <AddNewAttendance

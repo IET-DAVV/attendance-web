@@ -100,3 +100,35 @@ export function separateAttendance(
   };
   return attendanceData;
 }
+
+export function mapAttendanceValues(students: IStudentAttendance[]): any[] {
+  const attendanceMap: any[] = [];
+
+  if (!students.length) return attendanceMap;
+
+  for (const student of students) {
+    const attendanceDates = Object.keys(student.attendance);
+    const attendanceValues = Object.values(student.attendance);
+    const attendanceObj: any = {};
+
+    for (let i = 0; i < attendanceDates.length; i++) {
+      const { date, month, year } = getDateDayMonthYear(
+        parseInt(attendanceDates[i])
+      );
+      attendanceObj[`${date}/${month}/${year}`] =
+        attendanceValues[i] === "Absent"
+          ? "A"
+          : attendanceValues[i] === "Present"
+          ? "P"
+          : "NA";
+    }
+
+    attendanceMap.push({
+      rollID: student.rollID,
+      name: student.name,
+      ...attendanceObj,
+    });
+  }
+
+  return attendanceMap;
+}
