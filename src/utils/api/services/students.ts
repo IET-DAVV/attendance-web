@@ -14,6 +14,10 @@ async function getAllStudentsByYearAndBranch(
   });
 }
 
+async function addNewStudent(data: any) {
+  return await API.post("/students/add-new", [data]);
+}
+
 async function addNewStudentsMultiple(data: any) {
   return await API.post("/students/add-new", data);
 }
@@ -21,6 +25,7 @@ async function addNewStudentsMultiple(data: any) {
 const studentServices = {
   getAllStudentsByYear,
   addNewStudentsMultiple,
+  addNewStudent,
   getAllStudentsByYearAndBranch,
 };
 

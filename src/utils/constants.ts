@@ -21,7 +21,7 @@ export const BRANCH_TABLE_FILTER: any = getTableFilters(
 );
 
 export const SECTION_TABLE_FILTER: any = getTableFilters(
-  ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map((section) => ({
+  ["A", "B"].map((section) => ({
     text: section,
     value: section,
   })),

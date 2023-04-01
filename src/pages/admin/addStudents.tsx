@@ -31,7 +31,7 @@ const AddStudents: React.FC<{
       onOk={handleOk}
       onCancel={handleCancel}
     >
-      <Space direction="vertical">
+      <Space direction="vertical" style={{ width: "100%" }}>
         <Input
           addonBefore="Email"
           placeholder="Enter email"

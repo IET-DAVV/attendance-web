@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Layout, Table } from "antd";
+import { Button, Layout, message, Table } from "antd";
 import type { ColumnType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
 import { PlusOutlined } from "@ant-design/icons";
@@ -66,7 +66,7 @@ const Students: React.FC = () => {
 
   const [email, setEmail] = useState("");
   const [enrollmentID, setEnrollmentID] = useState("");
-  const [enrollmentYear, setEnrollmentYear] = useState(null);
+  const [enrollmentYear, setEnrollmentYear] = useState("");
   const [name, setName] = useState("");
   const [rollID, setRollID] = useState("");
   const [branch, setBranch] = useState("");
@@ -92,9 +92,28 @@ const Students: React.FC = () => {
     getAllStudents();
   }, []);
 
-  useEffect(() => {
-    console.log("AllBranches : ", branches);
-  }, []);
+  async function submitData(finalObj: IStudent) {
+    try {
+      const res = await studentServices.addNewStudent(finalObj);
+      message.success("Student added successfully");
+    } catch (error) {
+      console.log("Error adding student : ", error);
+      message.error("Error adding student");
+    }
+  }
+
+  function handleSubmit() {
+    const facultyObj: IStudent = {
+      email,
+      name,
+      enrollmentID,
+      enrollmentYear: parseInt(enrollmentYear),
+      rollID,
+      branchID: branch,
+      section,
+    };
+    submitData(facultyObj);
+  }
 
   return (
     <div className={styles.main}>
@@ -130,13 +149,7 @@ const Students: React.FC = () => {
       <AddStudents
         isModalOpen={addSubjectModel}
         handleOk={() => {
-          console.log("Email : ", email);
-          console.log("EnrollmentID : ", enrollmentID);
-          console.log("EnrollmentYear : ", enrollmentYear);
-          console.log("Name : ", name);
-          console.log("RollID : ", rollID);
-          console.log("Branch : ", branch);
-          console.log("Section : ", section);
+          handleSubmit();
           setAddSubjectModel(false);
         }}
         handleCancel={() => {
