@@ -107,6 +107,7 @@ export function mapAttendanceValues(students: IStudentAttendance[]): any[] {
   if (!students.length) return attendanceMap;
 
   for (const student of students) {
+    if (!student.attendance) continue;
     const attendanceDates = Object.keys(student.attendance);
     const attendanceValues = Object.values(student.attendance);
     const attendanceObj: any = {};
