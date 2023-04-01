@@ -74,7 +74,7 @@ const App: React.FC = () => {
           items={items}
         />
       </Sider>
-      <Layout className="site-layout" style={{ marginLeft: 100 }}>
+      <Layout className="site-layout" style={{ marginLeft: 200 }}>
         <Content style={{ overflow: "initial" }}>
           <div
             style={{

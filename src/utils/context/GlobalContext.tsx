@@ -75,7 +75,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     async function getBranches() {
       const { data } = await constantsServices.getAllBranches();
       console.log({ data });
-      setBranches(data.data);
+      setBranches(Object.values(data.data));
     }
 
     fetchStudents();

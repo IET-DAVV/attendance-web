@@ -40,7 +40,14 @@ async function getAllStudentsByYear(year: number) {
   const snapshot = await getDocs(q);
   const students = snapshot.docs.map((doc) => doc.data());
   return students
-    ?.map((studentObj) => Object.values(studentObj.students))
+    ?.map((studentObj) =>
+      Object.values(studentObj.students)?.map((student: any) => ({
+        ...student,
+        enrollmentYear: studentObj.enrollmentYear,
+        branchID: studentObj.branchID,
+        section: studentObj.section,
+      }))
+    )
     .flat();
 }
 

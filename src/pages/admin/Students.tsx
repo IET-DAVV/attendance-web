@@ -1,30 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { Button, Layout, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import styles from "../../styles/main.module.scss";
+import styles from "../../styles/admin.module.scss";
 import { PlusOutlined } from "@ant-design/icons";
 import AddStudents from "./addStudents";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
+import { IStudent } from "@/utils/interfaces";
+import { studentServices } from "@/utils/api/services";
 
-interface DataType {
+interface DataType extends IStudent {
   key: React.Key;
-  email: string;
-  enrollmentID: String;
-  enrollmentYear: Number;
-  name: String;
-  rollno: String;
-  branch: String;
-  section: String;
 }
 
 const columns: ColumnsType<DataType> = [
   {
-    title: "Email",
-    dataIndex: "email",
-  },
-  {
     title: "EnrollmentID",
     dataIndex: "enrollmentID",
+  },
+  {
+    title: "Email",
+    dataIndex: "email",
+    width: 250,
   },
   {
     title: "EnrollmentYear",
@@ -36,31 +32,20 @@ const columns: ColumnsType<DataType> = [
   },
   {
     title: "RollNo",
-    dataIndex: "rollno",
+    dataIndex: "rollID",
+    width: 120,
   },
   {
     title: "Branch",
-    dataIndex: "branch",
+    dataIndex: "branchID",
+    width: 100,
   },
   {
     title: "Section",
     dataIndex: "section",
+    width: 100,
   },
 ];
-
-const data: DataType[] = [];
-for (let i = 0; i < 20; i++) {
-  data.push({
-    key: i,
-    email: `19bcs113@ietdavv.edu.in`,
-    enrollmentID: "DE19152",
-    enrollmentYear: 2019,
-    name: "Anurag Pal",
-    rollno: "19C8113",
-    branch: "CS",
-    section: "B",
-  });
-}
 
 const Students: React.FC = () => {
   const [addSubjectModel, setAddSubjectModel] = useState(false);
@@ -72,8 +57,24 @@ const Students: React.FC = () => {
   const [rollID, setRollID] = useState("");
   const [branch, setBranch] = useState("");
   const [section, setSection] = useState("");
+  const [allStudents, setAllStudents] = useState<DataType[]>([]);
 
   const { branches } = useGlobalContext();
+
+  useEffect(() => {
+    const getAllStudents = async () => {
+      const response = await studentServices.getAllStudentsByYear(2021);
+      const data: Array<DataType> = response.data.data;
+      setAllStudents(
+        data?.map((student: IStudent) => ({
+          ...student,
+          key: student.enrollmentID,
+          enrollmentYear: 2021,
+        }))
+      );
+    };
+    getAllStudents();
+  }, []);
 
   useEffect(() => {
     console.log("AllBranches : ", branches);
@@ -103,7 +104,7 @@ const Students: React.FC = () => {
           //   ...rowSelection,
           // }}
           columns={columns}
-          dataSource={data}
+          dataSource={allStudents}
           scroll={{
             x: 1000,
             y: 500,
