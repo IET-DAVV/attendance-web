@@ -1,49 +1,63 @@
 import React, { useEffect, useState } from "react";
 import { Button, Layout, Table } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import type { ColumnType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
 import { PlusOutlined } from "@ant-design/icons";
 import AddStudents from "./addStudents";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
 import { IStudent } from "@/utils/interfaces";
 import { studentServices } from "@/utils/api/services";
+import { BRANCH_TABLE_FILTER, SECTION_TABLE_FILTER } from "@/utils/constants";
+import { getTableSorter } from "@/utils/functions";
+import CustomTable from "@/components/CustomTable";
 
 interface DataType extends IStudent {
-  key: React.Key;
+  key: string;
 }
 
-const columns: ColumnsType<DataType> = [
+const columns: ColumnType<DataType>[] = [
   {
     title: "EnrollmentID",
     dataIndex: "enrollmentID",
-  },
-  {
-    title: "Email",
-    dataIndex: "email",
-    width: 250,
-  },
-  {
-    title: "EnrollmentYear",
-    dataIndex: "enrollmentYear",
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
+    width: 200,
+    ...getTableSorter("enrollmentID"),
   },
   {
     title: "RollNo",
     dataIndex: "rollID",
     width: 120,
+    ...getTableSorter("rollID"),
   },
   {
     title: "Branch",
     dataIndex: "branchID",
-    width: 100,
+    width: 120,
+    ...BRANCH_TABLE_FILTER,
   },
   {
     title: "Section",
     dataIndex: "section",
-    width: 100,
+    width: 120,
+    ...SECTION_TABLE_FILTER,
+  },
+  {
+    title: "Name",
+    dataIndex: "name",
+    width: 300,
+    ...getTableSorter("name"),
+    searchable: true,
+  },
+  {
+    title: "Email",
+    dataIndex: "email",
+    width: 250,
+    searchable: true,
+  },
+  {
+    title: "EnrollmentYear",
+    dataIndex: "enrollmentYear",
+    width: 150,
+    searchable: true,
   },
 ];
 
@@ -66,11 +80,13 @@ const Students: React.FC = () => {
       const response = await studentServices.getAllStudentsByYear(2021);
       const data: Array<DataType> = response.data.data;
       setAllStudents(
-        data?.map((student: IStudent) => ({
-          ...student,
-          key: student.enrollmentID,
-          enrollmentYear: 2021,
-        }))
+        data
+          ?.map((student: IStudent) => ({
+            ...student,
+            key: student.enrollmentID,
+            enrollmentYear: 2021,
+          }))
+          .sort((a, b) => a.rollID.localeCompare(b.rollID))
       );
     };
     getAllStudents();
@@ -97,7 +113,7 @@ const Students: React.FC = () => {
         </div>
       </div>
       <div className={styles.tableContainer}>
-        <Table
+        <CustomTable<DataType>
           bordered
           // rowSelection={{
           //   type: "checkbox",

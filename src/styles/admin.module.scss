@@ -2,7 +2,7 @@
 
 .main {
   //   @extend .maxWidthContainer;
-  padding-top: 2rem;
+  //   padding-top: 2rem;
 
   .actionBtns {
     @extend .flexRow;
@@ -35,5 +35,12 @@
         }
       }
     }
+  }
+}
+
+.timeTable {
+  height: 100vh;
+  > div > div {
+    height: 100%;
   }
 }

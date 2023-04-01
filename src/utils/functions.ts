@@ -132,3 +132,25 @@ export function mapAttendanceValues(students: IStudentAttendance[]): any[] {
 
   return attendanceMap;
 }
+
+export function getTableFilters<T extends Record<string, string>>(
+  options: Array<{
+    text: string;
+    value: string;
+  }>,
+  dataIndex: keyof T
+) {
+  return {
+    filters: options,
+    onFilter: (value: string, record: T) =>
+      record?.[dataIndex].indexOf(value) === 0,
+  };
+}
+
+export function getTableSorter<T extends Record<string, string>>(
+  dataIndex: keyof T
+) {
+  return {
+    sorter: (a: T, b: T) => a?.[dataIndex].localeCompare(b?.[dataIndex]),
+  };
+}

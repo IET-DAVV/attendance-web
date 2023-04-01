@@ -1,22 +1,33 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Button, Layout, message, Table } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import type { ColumnType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
 import { PlusOutlined } from "@ant-design/icons";
 import AddStudents from "./addStudents";
 import AddFaculty from "./addFaculty";
 import { facultiesServices } from "@/utils/api/services";
 import { IFaculty } from "@/utils/interfaces";
+import { BRANCH_TABLE_FILTER } from "@/utils/constants";
+import { getTableSorter } from "@/utils/functions";
+import CustomTable from "@/components/CustomTable";
 
 interface DataType extends IFaculty {
-  key: React.Key;
+  key: any;
 }
 
-const columns: ColumnsType<DataType> = [
+const columns: ColumnType<DataType>[] = [
   {
     title: "BranchID",
     dataIndex: "branchID",
     width: 100,
+    ...BRANCH_TABLE_FILTER,
+  },
+  {
+    title: "Name",
+    dataIndex: "name",
+    width: 150,
+    ...getTableSorter("name"),
+    searchable: true,
   },
   {
     title: "Designation",
@@ -33,24 +44,7 @@ const columns: ColumnsType<DataType> = [
     dataIndex: "facultyType",
     width: 150,
   },
-  {
-    title: "Name",
-    dataIndex: "name",
-    width: 150,
-  },
 ];
-
-const data: DataType[] = [];
-// for (let i = 0; i < 20; i++) {
-//   data.push({
-//     key: i,
-//     branchID: `CS`,
-//     designation: "Professor",
-//     email: "someone@ietdavv.edu.in",
-//     facultyType: "Regular",
-//     name: "Faculty name",
-//   });
-// }
 
 const Faculties: React.FC = () => {
   const [addFacultyModel, setAddFacultyModel] = useState(false);
@@ -106,7 +100,7 @@ const Faculties: React.FC = () => {
         </div>
       </div>
       <div className={styles.tableContainer}>
-        <Table
+        <CustomTable<DataType>
           bordered
           // rowSelection={{
           //   type: "checkbox",

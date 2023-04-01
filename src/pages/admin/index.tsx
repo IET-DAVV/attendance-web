@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   BookFilled,
+  CalendarFilled,
   UsergroupAddOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -11,10 +12,11 @@ import AddSubjects from "./addSubjects";
 import Subjects from "./Subjects";
 import Students from "./Students";
 import Faculties from "./Faculties";
+import TimeTable from "./TimeTable";
 
 const { Header, Content, Footer, Sider } = Layout;
 
-const menuLabels = ["Faculties", "Students", "Subjects"];
+const menuLabels = ["Faculties", "Students", "Subjects", "Time Table"];
 
 const App: React.FC = () => {
   const {
@@ -23,22 +25,36 @@ const App: React.FC = () => {
   const [faculty, setFaculty] = useState(true);
   const [students, setStudents] = useState(false);
   const [subjects, setSubjects] = useState(false);
+  const [timeTable, setTimeTable] = useState(false);
 
   const items: MenuProps["items"] = [
     UserOutlined,
     UsergroupAddOutlined,
     BookFilled,
+    CalendarFilled,
   ].map((icon, index) => ({
     key: String(index + 1),
     icon: React.createElement(icon),
     label: menuLabels[index],
     onClick: () => {
-      if (index === 0) {
-        setFaculty(true), setStudents(false), setSubjects(false);
-      } else if (index === 1) {
-        setFaculty(false), setStudents(true), setSubjects(false);
-      } else if (index === 2) {
-        setFaculty(false), setStudents(false), setSubjects(true);
+      switch (index) {
+        case 0:
+          setFaculty(true), setStudents(false), setSubjects(false);
+          setTimeTable(false);
+          break;
+        case 1:
+          setFaculty(false), setStudents(true), setSubjects(false);
+          setTimeTable(false);
+          break;
+
+        case 2:
+          setFaculty(false), setStudents(false), setSubjects(true);
+          setTimeTable(false);
+          break;
+        case 3:
+          setFaculty(false), setStudents(false), setSubjects(false);
+          setTimeTable(true);
+          break;
       }
     },
   }));
@@ -87,6 +103,7 @@ const App: React.FC = () => {
             {faculty && <Faculties />}
             {students && <Students />}
             {subjects && <Subjects />}
+            {timeTable && <TimeTable />}
           </div>
         </Content>
       </Layout>
