@@ -50,16 +50,19 @@ const actionMenuItems = [
     key: "2",
     label: "Export PDF",
     icon: <FilePdfOutlined />,
+    disabled: true,
   },
   {
     key: "3",
     label: "Edit Attendance",
     icon: <EditOutlined />,
+    disabled: true,
   },
   {
     key: "4",
     label: "Detain Students",
     icon: <UserDeleteOutlined />,
+    disabled: true,
   },
 ];
 
