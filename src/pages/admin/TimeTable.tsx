@@ -24,6 +24,7 @@ const TimeTable: React.FC = () => {
       title: "Weekday",
       dataIndex: "weekday",
       key: "weekday",
+      fixed: "left",
     },
   ];
 
