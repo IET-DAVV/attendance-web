@@ -262,7 +262,10 @@ export default function Home() {
       </Head>
       <MainLayout className={styles.main}>
         <div className={styles.flexRow}>
-          <h3>IET Attendance</h3>
+          <h3>
+            {currentClassInfo?.subjectCode} |{" "}
+            {currentClassInfo?.id?.replace("_", " ")}
+          </h3>
           <div className={styles.actionBtns}>
             <div>
               <Tooltip
