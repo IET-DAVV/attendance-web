@@ -1,1 +1,1 @@
-export { default as WeeklyCalendar } from "./WeeklyCalendar/WeeklyCalendar";
+export { default as WeeklyCalendar } from "./WeeklyCalendar/";
