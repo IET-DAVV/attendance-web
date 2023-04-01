@@ -1,0 +1,46 @@
+@import "./commons.scss";
+
+.main {
+  //   @extend .maxWidthContainer;
+  //   padding-top: 2rem;
+
+  .actionBtns {
+    @extend .flexRow;
+    gap: 1rem;
+    .datePicker {
+      max-width: 250px;
+    }
+  }
+
+  .tableContainer {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 100%;
+    // border: 1px solid var(--clr-gray-light);
+    border-radius: 0.5rem;
+    overflow: hidden;
+
+    .today {
+      background-color: rgb(239, 249, 254) !important;
+      color: #4096ff;
+
+      &:is(th) {
+        position: relative;
+        &::after {
+          content: "(Today)";
+          position: absolute;
+          bottom: 0.2rem;
+          left: 1rem;
+          font-size: 0.6rem;
+        }
+      }
+    }
+  }
+}
+
+.timeTable {
+  height: 100vh;
+  > div > div {
+    height: 100%;
+  }
+}

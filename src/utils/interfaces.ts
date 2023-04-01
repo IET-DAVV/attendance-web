@@ -1,3 +1,9 @@
+export interface IResponse {
+  status: string;
+  data?: any;
+  message?: string;
+}
+
 export interface IUser {
   uid: string;
   email: string;
@@ -32,6 +38,7 @@ export interface ISubject {
 }
 
 export interface ICurrentClassInfo {
+  id: string;
   year: number;
   branch: string;
   section: string;
@@ -46,4 +53,12 @@ export interface IBranch {
   subjects: {
     [key: string]: ISubject;
   };
+}
+
+export interface IFaculty {
+  branchID: string;
+  designation: string;
+  email: string;
+  facultyType: string;
+  name: string;
 }

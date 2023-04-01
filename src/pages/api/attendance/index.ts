@@ -8,6 +8,7 @@ import {
   setDoc,
   arrayUnion,
   arrayRemove,
+  FieldPath,
 } from "firebase/firestore";
 import { getYear } from "@/utils/functions";
 import { checkAndCreateParentDocument } from "./student";
@@ -84,17 +85,31 @@ async function markAttendance(
     "classes"
   );
   const docRef = doc(collectionRef, classId);
+
+  let updateObj: any = {};
+
+  if (status === "present") {
+    updateObj = {
+      [attendanceDate]: {
+        absentStudentsList: arrayRemove(studentId),
+        presentStudentsList: arrayUnion(studentId),
+        attendanceDate: attendanceDate,
+      },
+    };
+  } else {
+    updateObj = {
+      [attendanceDate]: {
+        absentStudentsList: arrayUnion(studentId),
+        presentStudentsList: arrayRemove(studentId),
+        attendanceDate: attendanceDate,
+      },
+    };
+  }
+
   await setDoc(
     docRef,
     {
-      attendanceDate,
-      [status === "present"
-        ? `dates.${attendanceDate}.presentStudentsList`
-        : `dates.${attendanceDate}.absentStudentsList`]: arrayUnion(studentId),
-      [status === "present"
-        ? `dates.${attendanceDate}.absentStudentsList`
-        : `dates.${attendanceDate}.presentStudentsList`]:
-        arrayRemove(studentId),
+      dates: updateObj,
     },
     { merge: true }
   );
@@ -121,20 +136,33 @@ async function markAttendanceMultiple(
   // check if parent document exists
 
   const docRef = doc(collectionRef, classId);
+  // const presentFieldPath = new FieldPath("dates", attendanceDate.toString(), "presentStudentsList");
+  // const absentFieldPath = new FieldPath("dates", attendanceDate.toString(), "absentStudentsList");
+
+  let updateObj = {};
+
+  if (status === "present") {
+    updateObj = {
+      [attendanceDate]: {
+        absentStudentsList: arrayRemove(...studentIds),
+        presentStudentsList: arrayUnion(...studentIds),
+        attendanceDate: attendanceDate,
+      },
+    };
+  } else {
+    updateObj = {
+      [attendanceDate]: {
+        absentStudentsList: arrayUnion(...studentIds),
+        presentStudentsList: arrayRemove(...studentIds),
+        attendanceDate: attendanceDate,
+      },
+    };
+  }
+
   await setDoc(
     docRef,
     {
-      [status === "present"
-        ? `dates.${attendanceDate}.presentStudentsList`
-        : `dates.${attendanceDate}.absentStudentsList`]: arrayUnion(
-        ...studentIds
-      ),
-      [status === "present"
-        ? `dates.${attendanceDate}.absentStudentsList`
-        : `dates.${attendanceDate}.presentStudentsList`]: arrayRemove(
-        ...studentIds
-      ),
-      attendanceDate,
+      dates: updateObj,
     },
     { merge: true }
   );

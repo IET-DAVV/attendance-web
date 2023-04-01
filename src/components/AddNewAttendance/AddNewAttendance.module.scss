@@ -111,17 +111,26 @@ $tabHeight: 50px;
 
 .gridContainer {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
-  height: calc(100vh - $tabHeight - 200px);
+  height: calc(100vh - $tabHeight - 220px);
   overflow-y: auto;
+  padding: 0.1rem;
 }
 .gridViewCard {
   width: 100%;
-  height: 120px;
+  min-height: 140px;
   background: white;
   border-radius: 0.6rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
   padding: 1rem;
+  outline: 1px solid rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    outline: 1px solid rgba(0, 0, 0, 0.1);
+  }
 
   &.absent {
     background: $absentColor;

@@ -10,9 +10,18 @@ import {
   OrderedListOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Checkbox, Drawer, Space, Tabs, Tag } from "antd";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Drawer,
+  message,
+  Space,
+  Tabs,
+  Tag,
+} from "antd";
 import { CheckboxChangeEvent } from "antd/es/checkbox";
-import clsx from "clsx";
+import attendanceServices from "@/utils/api/services/attendance";
 import { useEffect, useState } from "react";
 import styles from "./AddNewAttendance.module.scss";
 import GridView from "./GridView";
@@ -22,14 +31,21 @@ import SingleView from "./SingleView";
 const AddNewAttendance: React.FC<{
   open: boolean;
   onClose: () => void;
-}> = ({ open, onClose }) => {
+  submitAttendance: () => void;
+}> = ({ open, onClose, submitAttendance }) => {
   const today = getDateDayMonthYear(new Date());
   const [activeKey, setActiveKey] = useState<string>("1");
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number>(0);
   const [currentStudent, setCurrentStudent] =
     useState<IStudentAttendance | null>(null);
 
-  const { studentsAttendance, setStudentsAttendance } = useGlobalContext();
+  const {
+    studentsAttendance,
+    setStudentsAttendance,
+    currentClassInfo,
+    currentSubject,
+    academicYear,
+  } = useGlobalContext();
 
   function getNewIndex(direction: "prev" | "next") {
     let newIndex = currentStudentIndex;
@@ -197,6 +213,13 @@ const AddNewAttendance: React.FC<{
       open={open}
       key={"bottom"}
       className={styles.container}
+      extra={
+        <Space>
+          <Button type="primary" onClick={submitAttendance}>
+            Submit Attendance
+          </Button>
+        </Space>
+      }
     >
       <Tabs
         className={styles.tabsContainer}

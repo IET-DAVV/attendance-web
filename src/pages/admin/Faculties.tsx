@@ -1,54 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { Button, Layout, Table } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import styles from "../../styles/main.module.scss";
+import React, { useCallback, useEffect, useState } from "react";
+import { Button, Layout, message, Table } from "antd";
+import type { ColumnType } from "antd/es/table";
+import styles from "../../styles/admin.module.scss";
 import { PlusOutlined } from "@ant-design/icons";
 import AddStudents from "./addStudents";
 import AddFaculty from "./addFaculty";
+import { facultiesServices } from "@/utils/api/services";
+import { IFaculty } from "@/utils/interfaces";
+import { BRANCH_TABLE_FILTER } from "@/utils/constants";
+import { getTableSorter } from "@/utils/functions";
+import CustomTable from "@/components/CustomTable";
 
-interface DataType {
-  key: React.Key;
-  branchID: string;
-  designation: String;
-  email: String;
-  facultyType: String;
-  name: String;
+interface DataType extends IFaculty {
+  key: any;
 }
 
-const columns: ColumnsType<DataType> = [
+const columns: ColumnType<DataType>[] = [
   {
     title: "BranchID",
     dataIndex: "branchID",
-  },
-  {
-    title: "Designation",
-    dataIndex: "designation",
-  },
-  {
-    title: "Email",
-    dataIndex: "email",
-  },
-  {
-    title: "Faculty Type",
-    dataIndex: "facultyType",
+    width: 100,
+    ...BRANCH_TABLE_FILTER,
   },
   {
     title: "Name",
     dataIndex: "name",
+    width: 150,
+    ...getTableSorter("name"),
+    searchable: true,
+  },
+  {
+    title: "Designation",
+    dataIndex: "designation",
+    width: 150,
+  },
+  {
+    title: "Email",
+    dataIndex: "email",
+    width: 200,
+  },
+  {
+    title: "Faculty Type",
+    dataIndex: "facultyType",
+    width: 150,
   },
 ];
-
-const data: DataType[] = [];
-for (let i = 0; i < 20; i++) {
-  data.push({
-    key: i,
-    branchID: `CS`,
-    designation: "Professor",
-    email: "someone@ietdavv.edu.in",
-    facultyType: "Regular",
-    name: "Faculty name",
-  });
-}
 
 const Faculties: React.FC = () => {
   const [addFacultyModel, setAddFacultyModel] = useState(false);
@@ -58,6 +54,34 @@ const Faculties: React.FC = () => {
   const [email, setEmail] = useState(null);
   const [facultyType, setFacultyType] = useState("");
   const [name, setName] = useState("");
+  const [allFaculties, setAllFaculties] = useState<DataType[]>([]);
+
+  useEffect(() => {
+    facultiesServices.getAllFaculties().then((res) => {
+      setAllFaculties(res.data.data);
+    });
+  }, []);
+
+  async function submitData(finalObj: IFaculty) {
+    try {
+      const res = await facultiesServices.addNewFaculty(finalObj);
+      message.success("Faculty added successfully");
+    } catch (error) {
+      console.log("Error adding faculty : ", error);
+      message.error("Error adding faculty");
+    }
+  }
+
+  function handleSubmit() {
+    const facultyObj: IFaculty = {
+      branchID,
+      designation,
+      email: email as unknown as string,
+      facultyType,
+      name,
+    };
+    submitData(facultyObj);
+  }
 
   return (
     <div className={styles.main}>
@@ -76,16 +100,16 @@ const Faculties: React.FC = () => {
         </div>
       </div>
       <div className={styles.tableContainer}>
-        <Table
+        <CustomTable<DataType>
           bordered
           // rowSelection={{
           //   type: "checkbox",
           //   ...rowSelection,
           // }}
           columns={columns}
-          dataSource={data}
+          dataSource={allFaculties}
           scroll={{
-            x: 1000,
+            x: 800,
             y: 500,
           }}
         />
@@ -93,11 +117,7 @@ const Faculties: React.FC = () => {
       <AddFaculty
         isModalOpen={addFacultyModel}
         handleOk={() => {
-          console.log("BranchID : ", branchID);
-          console.log("Designation : ", designation);
-          console.log("Email : ", email);
-          console.log("FacultyType : ", facultyType);
-          console.log("Name : ", name);
+          handleSubmit();
           setAddFacultyModel(false);
         }}
         handleCancel={() => {

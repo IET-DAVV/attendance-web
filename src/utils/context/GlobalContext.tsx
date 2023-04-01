@@ -22,6 +22,7 @@ interface IGlobalContext {
   currentSubject: ISubject | null;
   currentClassInfo: ICurrentClassInfo;
   branches: Array<IBranch>;
+  academicYear: string;
 }
 
 const GlobalContext = createContext<IGlobalContext>({} as IGlobalContext);
@@ -45,8 +46,10 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     section: "A",
     sem: 4,
     subjectCode: "CER4C3",
+    id: "2021_CS_A",
   });
   const [branches, setBranches] = useState<Array<IBranch>>([]);
+  const [academicYear, setAcademicYear] = useState<string>("2022_2023");
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -72,7 +75,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     async function getBranches() {
       const { data } = await constantsServices.getAllBranches();
       console.log({ data });
-      setBranches(data.data);
+      setBranches(Object.values(data.data));
     }
 
     fetchStudents();
@@ -93,6 +96,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         currentSubject,
         currentClassInfo,
         branches,
+        academicYear,
       }}
     >
       {children}

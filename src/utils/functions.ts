@@ -1,3 +1,5 @@
+import { ICurrentClassInfo, IStudentAttendance } from "./interfaces";
+
 export function formDateDDMMYYYY(date: any) {
   const tempDate = new Date(date);
   console.log(tempDate, date);
@@ -75,4 +77,80 @@ export function isBetweenDateRange(
   const tempStartDate = new Date(startDate);
   const tempEndDate = new Date(endDate);
   return tempDate >= tempStartDate && tempDate <= tempEndDate;
+}
+
+export function separateAttendance(
+  studentsAttendance: IStudentAttendance[],
+  currentClassInfo: ICurrentClassInfo
+) {
+  const absentStudents = studentsAttendance.filter(
+    (student: IStudentAttendance) =>
+      student.attendance?.[getToday12AMDatetime()] === "Absent"
+  );
+  const presentStudents = studentsAttendance.filter(
+    (student: IStudentAttendance) =>
+      student.attendance?.[getToday12AMDatetime()] === "Present"
+  );
+  const attendanceData = {
+    date: getToday12AMDatetime(),
+    absentStudents,
+    presentStudents,
+    subjectCode: currentClassInfo?.subjectCode,
+    classID: currentClassInfo?.id,
+  };
+  return attendanceData;
+}
+
+export function mapAttendanceValues(students: IStudentAttendance[]): any[] {
+  const attendanceMap: any[] = [];
+
+  if (!students.length) return attendanceMap;
+
+  for (const student of students) {
+    const attendanceDates = Object.keys(student.attendance);
+    const attendanceValues = Object.values(student.attendance);
+    const attendanceObj: any = {};
+
+    for (let i = 0; i < attendanceDates.length; i++) {
+      const { date, month, year } = getDateDayMonthYear(
+        parseInt(attendanceDates[i])
+      );
+      attendanceObj[`${date}/${month}/${year}`] =
+        attendanceValues[i] === "Absent"
+          ? "A"
+          : attendanceValues[i] === "Present"
+          ? "P"
+          : "NA";
+    }
+
+    attendanceMap.push({
+      rollID: student.rollID,
+      name: student.name,
+      ...attendanceObj,
+    });
+  }
+
+  return attendanceMap;
+}
+
+export function getTableFilters<T extends Record<string, string>>(
+  options: Array<{
+    text: string;
+    value: string;
+  }>,
+  dataIndex: keyof T
+) {
+  return {
+    filters: options,
+    onFilter: (value: string, record: T) =>
+      record?.[dataIndex].indexOf(value) === 0,
+  };
+}
+
+export function getTableSorter<T extends Record<string, string>>(
+  dataIndex: keyof T
+) {
+  return {
+    sorter: (a: T, b: T) => a?.[dataIndex].localeCompare(b?.[dataIndex]),
+  };
 }

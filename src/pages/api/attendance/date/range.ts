@@ -51,13 +51,13 @@ async function getStudentsAttendanceInDateRange(
     academicYear,
     "subjects",
     subjectCode,
-    "classess"
+    "classes"
   );
   const docRef = doc(collectionRef, classId);
   const snapshot = await getDoc(docRef);
   let data: any = {};
   const dates = Object.keys(snapshot.data()?.dates || {})?.filter((date) =>
-    isBetweenDateRange(date, dateRange.startDate, dateRange.endDate)
+    isBetweenDateRange(parseInt(date), dateRange.startDate, dateRange.endDate)
   );
   if (studentId?.length) {
     // q = query(
@@ -78,7 +78,7 @@ async function getStudentsAttendanceInDateRange(
     //   where("attendanceDate", "<=", dateRange.endDate)
     // );
     dates?.forEach((date) => {
-      data[date] = date;
+      data[date] = snapshot.data()?.dates[date];
     });
   }
 

@@ -6,6 +6,8 @@ import {
   getDateDayMonthYear,
   getToday12AMDatetime,
   getTotalDaysCountInCurrentMonth,
+  mapAttendanceValues,
+  separateAttendance,
 } from "@/utils/functions";
 import styles from "../styles/main.module.scss";
 import {
@@ -13,6 +15,7 @@ import {
   DatePicker,
   Dropdown,
   MenuProps,
+  message,
   Pagination,
   Select,
   Table,
@@ -30,7 +33,8 @@ import MainLayout from "@/layouts/MainLayout/MainLayout";
 import AddNewAttendance from "@/components/AddNewAttendance/AddNewAttendance";
 import dayjs from "dayjs";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
-import { CSVDownload, CSVLink } from "react-csv";
+import { CSVLink } from "react-csv";
+import { IStudentAttendance } from "@/utils/interfaces";
 const { RangePicker } = DatePicker;
 
 // items arr for exporting and marking attendance
@@ -57,8 +61,6 @@ const actionMenuItems = [
   },
 ];
 
-const academicYear = "2021-2022";
-const classId = "2021_CS_A";
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
@@ -73,8 +75,12 @@ export default function Home() {
   ]);
 
   const [columns, setColumns] = useState([]);
-  const { studentsAttendance, setStudentsAttendance, currentClassInfo } =
-    useGlobalContext();
+  const {
+    studentsAttendance,
+    setStudentsAttendance,
+    currentClassInfo,
+    academicYear,
+  } = useGlobalContext();
 
   const csvBtnRef = useRef<
     CSVLink & HTMLAnchorElement & { link: HTMLAnchorElement }
@@ -89,11 +95,12 @@ export default function Home() {
         endDate: currentDateRange[1].toDate().getTime(),
       },
       currentClassInfo.subjectCode,
-      classId
+      currentClassInfo?.id
     );
+    console.log("data", data);
     setCurrentWeekAttendance(data.data);
     setLoading(false);
-  }, [currentDateRange, currentClassInfo.subjectCode]);
+  }, [currentDateRange, currentClassInfo, academicYear]);
 
   useEffect(() => {
     if (currentDateRange.length && currentClassInfo.subjectCode) {
@@ -105,32 +112,67 @@ export default function Home() {
     getCurrentDateRangeAttendance,
   ]);
 
-  async function markAttendanceMultiple() {
-    const todayTime = getToday12AMDatetime().toString();
-    const absentStudents = studentsAttendance?.filter(
-      (student: any) => (student.attendance[todayTime] = "Absent")
+  async function markStudentsStatus(
+    stduentsList: Array<IStudentAttendance>,
+    config: {
+      date: number;
+      subjectCode: string;
+      classID: string;
+    },
+    status: "present" | "absent"
+  ) {
+    const loadingMessage = message.loading(
+      "Marking attendance for " + stduentsList.length + " students",
+      0
     );
-    const presentStudents = studentsAttendance?.filter(
-      (student: any) => (student.attendance[todayTime] = "Present")
-    );
-    await attendanceServices.markStudentAttendanceMultiple(
-      academicYear,
-      currentClassInfo.subjectCode,
-      todayTime,
-      absentStudents?.map((student: any) => student.enrollmentID),
-      "absent",
-      "classID" //provide classID here
-    );
-    await attendanceServices.markStudentAttendanceMultiple(
-      academicYear,
-      currentClassInfo.subjectCode,
-      todayTime,
-      presentStudents?.map((student: any) => student.enrollmentID),
-      "present",
-      "classID" //provide classID here
-    );
+    try {
+      const { date, subjectCode, classID } = config;
+      await attendanceServices.markStudentAttendanceMultiple(
+        academicYear,
+        subjectCode,
+        date.toString(),
+        stduentsList?.map((student) => student.enrollmentID),
+        status,
+        classID
+      );
+      loadingMessage();
+      message.success(stduentsList.length + " students marked " + status);
+    } catch (error: any) {
+      loadingMessage();
+      message.error(error.message);
+    }
   }
 
+  async function handleSubmitAttendance() {
+    const { absentStudents, presentStudents, date, subjectCode, classID } =
+      separateAttendance(studentsAttendance, currentClassInfo);
+    if (!subjectCode || !classID) {
+      message.error("Please select a subject and class to mark attendance");
+      return;
+    }
+    if (!absentStudents.length && !presentStudents.length) {
+      message.error("Please mark attendance for atleast one student");
+      return;
+    }
+    await markStudentsStatus(
+      absentStudents,
+      {
+        date,
+        subjectCode: subjectCode as string,
+        classID,
+      },
+      "absent"
+    );
+    await markStudentsStatus(
+      presentStudents,
+      {
+        date,
+        subjectCode: subjectCode as string,
+        classID,
+      },
+      "present"
+    );
+  }
   useEffect(() => {
     let prevColumns = [
       {
@@ -197,13 +239,12 @@ export default function Home() {
   };
 
   async function submitAttendance() {
-    await markAttendanceMultiple();
+    await handleSubmitAttendance();
     setNewAttendanceDrawer(false);
   }
 
   useEffect(() => {
     if (studentsAttendance?.length) {
-      console.log(studentsAttendance);
     }
   }, [studentsAttendance]);
 
@@ -273,13 +314,15 @@ export default function Home() {
             }}
           />
         </div>
-        <CSVDownload
+        <CSVLink
           ref={csvBtnRef}
-          data={studentsAttendance}
+          target="_blank"
+          data={mapAttendanceValues(studentsAttendance)}
           filename={`attendance-${currentClassInfo.subjectCode}-${currentClassInfo.section}.csv`}
         />
         <AddNewAttendance
           open={newAttendanceDrawer}
+          submitAttendance={submitAttendance}
           onClose={() => setNewAttendanceDrawer(false)}
         />
       </MainLayout>
