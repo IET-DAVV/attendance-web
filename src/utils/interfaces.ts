@@ -56,6 +56,7 @@ export interface IBranch {
 }
 
 export interface IFaculty {
+  id: string;
   branchID: string;
   designation: string;
   email: string;

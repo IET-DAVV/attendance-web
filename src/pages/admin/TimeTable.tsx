@@ -1,10 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Button, Dropdown, Form, Menu, Modal, Select, Table } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Dropdown,
+  Form,
+  Menu,
+  Modal,
+  Row,
+  Select,
+  Table,
+} from "antd";
 import { ColumnType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
 import { DownOutlined, PlusOutlined } from "@ant-design/icons";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
-import { ISubject } from "@/utils/interfaces";
+import { IFaculty, ISubject } from "@/utils/interfaces";
+import { facultiesServices } from "@/utils/api/services";
 
 const { Option } = Select;
 
@@ -33,6 +45,14 @@ const TimeTable: React.FC = () => {
   const [filteredSubjects, setFilteredSubjects] = useState<ISubject[]>([]);
   const [branch, setBranch] = useState("EI");
   const [section, setSection] = useState("A");
+  const [faculties, setFaculties] = useState<Array<IFaculty>>([]);
+  const [dataSource, setDataSource] = useState<WeekdayRow[]>([
+    { key: "Monday", weekday: "Monday" },
+    { key: "Tuesday", weekday: "Tuesday" },
+    { key: "Wednesday", weekday: "Wednesday" },
+    { key: "Thursday", weekday: "Thursday" },
+    { key: "Friday", weekday: "Friday" },
+  ]);
 
   const { branches, subjects, currentClassInfo } = useGlobalContext();
 
@@ -47,31 +67,40 @@ const TimeTable: React.FC = () => {
     }
   }, [branch, section, subjects, currentClassInfo]);
 
+  useEffect(() => {
+    async function fetchFaculties() {
+      const res = await facultiesServices.getAllFaculties();
+      setFaculties(res.data.data);
+    }
+    fetchFaculties();
+  }, []);
+
   const showModal = (row: number, column: string) => {
     setSelectedCell({ row, column });
-    form.setFieldsValue({ subject: dataSource[row][column] });
+    const cellData = dataSource[row][column];
+    const [subjectCode, faculty] = cellData
+      ? cellData.split("\n")
+      : [null, null];
+    form.setFieldsValue({ subjectCode, faculty });
     setIsModalVisible(true);
   };
 
   const handleOk = () => {
     form.validateFields().then((values) => {
-      const { subject } = values;
-      dataSource[selectedCell.row][selectedCell.column] = subject;
+      const { subjectCode, faculty } = values;
+      const newRow = { ...dataSource[selectedCell.row] };
+      newRow[selectedCell.column] = subjectCode + "\n" + faculty;
+      const updatedDataSource = [...dataSource];
+      updatedDataSource[selectedCell.row] = newRow;
+      setDataSource(updatedDataSource);
       setIsModalVisible(false);
+      form.resetFields(); // Reset the form after pressing OK
     });
   };
-
   const handleCancel = () => {
     setIsModalVisible(false);
+    form.resetFields(); // Reset the form after pressing OK
   };
-
-  const dataSource: WeekdayRow[] = [
-    { key: "Monday", weekday: "Monday" },
-    { key: "Tuesday", weekday: "Tuesday" },
-    { key: "Wednesday", weekday: "Wednesday" },
-    { key: "Thursday", weekday: "Thursday" },
-    { key: "Friday", weekday: "Friday" },
-  ];
 
   const columns: ColumnType<WeekdayRow>[] = [
     {
@@ -106,6 +135,15 @@ const TimeTable: React.FC = () => {
 
   const removeTimeSlot = () => {
     setTimeSlots(timeSlots.slice(0, -1));
+  };
+
+  // Add this function to handle the recess
+  const handleRecess = (row: number, column: string) => {
+    const newRow = { ...dataSource[row] };
+    newRow[column] = "Recess";
+    const updatedDataSource = [...dataSource];
+    updatedDataSource[row] = newRow;
+    setDataSource(updatedDataSource);
   };
 
   const timeSlotActions = (
@@ -164,39 +202,65 @@ const TimeTable: React.FC = () => {
         onCancel={handleCancel}
       >
         <div className={styles.formContainer}>
-          <Form form={form} layout="vertical">
-            <Form.Item
-              label="Subject Code"
-              name="subjectCode"
-              rules={[
-                { required: true, message: "Please select a subject code!" },
-              ]}
-            >
-              <Select placeholder="Select a subject code">
-                {filteredSubjects.map((subject, i) => (
-                  <Option
-                    key={subject.subjectCode + i}
-                    value={subject.subjectCode}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Card title="Add Subject" style={{ height: "100%" }}>
+                <Form form={form} layout="vertical">
+                  <Form.Item
+                    label="Subject Code"
+                    name="subjectCode"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a subject code!",
+                      },
+                    ]}
                   >
-                    {subject.subjectCode} - {subject.subjectName}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item
-              label="Faculty"
-              name="faculty"
-              rules={[{ required: true, message: "Please select a teacher!" }]}
-            >
-              <Select placeholder="Select a teacher">
-                {teachers.map((teacher) => (
-                  <Option key={teacher} value={teacher}>
-                    {teacher}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Form>
+                    <Select placeholder="Select a subject code">
+                      {filteredSubjects.map((subject, i) => (
+                        <Option
+                          key={subject.subjectCode + i}
+                          value={subject.subjectCode}
+                        >
+                          {subject.subjectCode} - {subject.subjectName}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item
+                    label="Faculty"
+                    name="faculty"
+                    rules={[
+                      { required: true, message: "Please select a teacher!" },
+                    ]}
+                  >
+                    <Select placeholder="Select a teacher">
+                      {faculties.map((faculty) => (
+                        <Option key={faculty.name} value={faculty.id}>
+                          {faculty.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Form>
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card title="Add Recess" style={{ height: "100%" }}>
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      handleRecess(selectedCell.row, selectedCell.column);
+                      setIsModalVisible(false);
+                    }}
+                  >
+                    Set Recess
+                  </Button>
+                </Form.Item>
+              </Card>
+            </Col>
+          </Row>
         </div>
       </Modal>
     </div>

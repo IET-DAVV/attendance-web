@@ -155,3 +155,9 @@ export function getTableSorter<T extends Record<string, string>>(
     sorter: (a: T, b: T) => a?.[dataIndex].localeCompare(b?.[dataIndex]),
   };
 }
+
+export function getInitials(name: string) {
+  const nameParts = name.split(" ");
+  const initials = nameParts.map((part) => part.charAt(0).toUpperCase());
+  return initials.join("");
+}
