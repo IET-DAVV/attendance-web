@@ -74,6 +74,7 @@ const Faculties: React.FC = () => {
 
   function handleSubmit() {
     const facultyObj: IFaculty = {
+      id: Math.random().toString(36).substr(2, 9),
       branchID,
       designation,
       email: email as unknown as string,
