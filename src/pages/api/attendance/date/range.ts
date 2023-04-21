@@ -28,6 +28,14 @@ type Data = {
   attendanceDate?: number | null;
 };
 
+function generateDateRange(startDate: number, endDate: number) {
+  const dates = [];
+  for (let i = startDate; i <= endDate; i += 86400000) {
+    dates.push(i);
+  }
+  return dates;
+}
+
 async function getStudentsAttendanceInDateRange(
   academicYear: string,
   dateRange: {
@@ -56,29 +64,23 @@ async function getStudentsAttendanceInDateRange(
   const docRef = doc(collectionRef, classId);
   const snapshot = await getDoc(docRef);
   let data: any = {};
-  const dates = Object.keys(snapshot.data()?.dates || {})?.filter((date) =>
-    isBetweenDateRange(parseInt(date), dateRange.startDate, dateRange.endDate)
-  );
+  const dates = generateDateRange(dateRange.startDate, dateRange.endDate);
   if (studentId?.length) {
-    // q = query(
-    //   collectionRef,
-    //   where("attendanceDate", ">=", dateRange.startDate),
-    //   where("attendanceDate", "<=", dateRange.endDate),
-    //   where("presentStudentsList", "array-contains", studentId)
-    // );
     dates
       ?.filter((date) => data[date]?.presentStudentsList?.includes(studentId))
       .forEach((date) => {
         data[date] = date;
       });
   } else {
-    // q = query(
-    //   collectionRef,
-    //   where("attendanceDate", ">=", dateRange.startDate),
-    //   where("attendanceDate", "<=", dateRange.endDate)
-    // );
     dates?.forEach((date) => {
-      data[date] = snapshot.data()?.dates[date];
+      if (snapshot.data()?.dates[date])
+        data[date] = snapshot.data()?.dates[date];
+      else
+        data[date] = {
+          presentStudentsList: [],
+          absentStudentsList: [],
+          attendanceDate: date,
+        };
     });
   }
 

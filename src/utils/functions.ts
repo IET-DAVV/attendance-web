@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { ICurrentClassInfo, IStudentAttendance } from "./interfaces";
 
 export function formDateDDMMYYYY(date: any) {
@@ -160,4 +161,19 @@ export function getInitials(name: string) {
   const nameParts = name.split(" ");
   const initials = nameParts.map((part) => part.charAt(0).toUpperCase());
   return initials.join("");
+}
+
+export function disabledFutureDate(current: dayjs.Dayjs) {
+  // Do not allow dates greater than today's date
+  return current && current > dayjs().endOf("day");
+}
+
+export function uniqueDatesOnly(columns: Array<any>) {
+  const uniqueDates = new Set();
+  const uniqueColumns = columns.filter((item) => {
+    if (uniqueDates.has(item.date)) return false;
+    uniqueDates.add(item.date);
+    return true;
+  });
+  return uniqueColumns;
 }

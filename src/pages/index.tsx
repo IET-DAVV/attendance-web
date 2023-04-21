@@ -2,6 +2,7 @@ import Head from "next/head";
 import { createRef, useCallback, useEffect, useRef, useState } from "react";
 import { attendanceServices, studentServices } from "@/utils/api/services";
 import {
+  disabledFutureDate,
   getCurrentWeekDates,
   getDateDayMonthYear,
   getTableFilters,
@@ -10,6 +11,7 @@ import {
   getTotalDaysCountInCurrentMonth,
   mapAttendanceValues,
   separateAttendance,
+  uniqueDatesOnly,
 } from "@/utils/functions";
 import styles from "../styles/main.module.scss";
 import {
@@ -66,6 +68,39 @@ const actionMenuItems = [
   },
 ];
 
+const prevColumns = [
+  {
+    title: "Roll No.",
+    dataIndex: "rollID",
+    key: "rollID",
+    width: 100,
+    fixed: "left",
+    ...getTableSorter("rollID"),
+  },
+  {
+    title: "Enroll No.",
+    dataIndex: "enrollmentID",
+    key: "enrollmentID",
+    width: 100,
+  },
+  {
+    title: "Name",
+    dataIndex: "name",
+    key: "name",
+    width: 200,
+    ...getTableSorter("name"),
+    render: (text: string) => (
+      <span
+        style={{
+          textTransform: "capitalize",
+        }}
+      >
+        {text.toLowerCase()}
+      </span>
+    ),
+  },
+];
+
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
@@ -76,10 +111,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [currentDateRange, setCurrentDateRange] = useState<any>([
     dayjs(getCurrentWeekDates()[0]),
-    dayjs(getCurrentWeekDates()[6]),
+    dayjs(getCurrentWeekDates()[5]),
   ]);
 
-  const [columns, setColumns] = useState([]);
+  const [columns, setColumns] = useState<Array<any>>([]);
   const {
     studentsAttendance,
     setStudentsAttendance,
@@ -104,6 +139,13 @@ export default function Home() {
     );
     console.log("data", data);
     setCurrentWeekAttendance(data.data);
+    let newDateCols = uniqueDatesOnly(
+      Object.keys(data.data)?.map((date) =>
+        getAttendaceCell(new Date(Number(date)))
+      )
+    ).sort((a: any, b: any) => a.date - b.date);
+
+    setColumns([...prevColumns, ...newDateCols, getAttendancePercentageCol()]);
     setLoading(false);
   }, [currentDateRange, currentClassInfo, academicYear]);
 
@@ -179,36 +221,8 @@ export default function Home() {
     );
   }
   useEffect(() => {
-    let prevColumns = [
-      {
-        title: "Roll No.",
-        dataIndex: "rollID",
-        key: "rollID",
-        ...getTableSorter("rollID"),
-      },
-      {
-        title: "Enroll No.",
-        dataIndex: "enrollmentID",
-        key: "enrollmentID",
-      },
-      {
-        title: "Name",
-        dataIndex: "name",
-        key: "name",
-        ...getTableSorter("name"),
-        render: (text: string) => (
-          <span
-            style={{
-              textTransform: "capitalize",
-            }}
-          >
-            {text.toLowerCase()}
-          </span>
-        ),
-      },
-    ];
-    let newColumns = getNewColumnsForCurrentWeek(prevColumns);
-    setColumns(newColumns);
+    // let newColumns = getNewColumnsForCurrentWeek(prevColumns);
+    setColumns(prevColumns);
   }, []);
 
   useEffect(() => {
@@ -296,6 +310,7 @@ export default function Home() {
                 onChange={(dates) => {
                   setCurrentDateRange(dates);
                 }}
+                disabledDate={disabledFutureDate}
                 value={currentDateRange}
               />
             </div>
@@ -343,49 +358,77 @@ export default function Home() {
 function getNewColumnsForCurrentWeek(prevColumns: Array<any>) {
   let newColumns: any = [
     ...prevColumns,
-    ...getCurrentWeekDates().map((date) => {
-      let ddmy = getDateDayMonthYear(date.getTime());
-      let today = new Date().setHours(0, 0, 0, 0);
-      return {
-        title: `${ddmy.day} ${ddmy.date} ${ddmy.month}`,
-        dataIndex: "attendance",
-        key: "attendance",
-        className: today === date.getTime() ? styles.today : "",
-
-        render: (text: any) => {
-          let attendanceStatus = text?.[date.getTime()];
-          return (
-            <span
-              style={{
-                // backgroundColor:
-                //   today === date.getTime() ? "#d6e7ff" : "transparent",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Tag
-                color={
-                  attendanceStatus === "Present"
-                    ? "green"
-                    : attendanceStatus === "Absent"
-                    ? "red"
-                    : today === date.getTime()
-                    ? "blue"
-                    : ""
-                }
-              >
-                {text?.[date.getTime()] || "NA"}
-              </Tag>
-            </span>
-          );
-        },
-      };
-    }),
+    ...getCurrentWeekDates().map((date) => getAttendaceCell(date)),
   ];
 
   return newColumns;
+}
+
+function getAttendaceCell(date: Date) {
+  let ddmy = getDateDayMonthYear(date.getTime());
+  let today = new Date().setHours(0, 0, 0, 0);
+  return {
+    title: `${ddmy.day} ${ddmy.date} ${ddmy.month}`,
+    dataIndex: "attendance",
+    key: "attendance",
+    date,
+    className: today === date.getTime() ? styles.today : "",
+    width: 120,
+    render: (text: any) => {
+      let attendanceStatus = text?.[date.getTime()];
+      return (
+        <span
+          style={{
+            // backgroundColor:
+            //   today === date.getTime() ? "#d6e7ff" : "transparent",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Tag
+            color={
+              attendanceStatus === "Present"
+                ? "green"
+                : attendanceStatus === "Absent"
+                ? "red"
+                : today === date.getTime()
+                ? "blue"
+                : ""
+            }
+          >
+            {text?.[date.getTime()] || "NA"}
+          </Tag>
+        </span>
+      );
+    },
+  };
+}
+
+function getAttendancePercentageCol() {
+  return {
+    title: "% Att.",
+    dataIndex: "attendancePercentage",
+    key: "attendancePercentage",
+    fixed: "right",
+    width: 100,
+    render: (text: any, row: any) => (
+      <span>{calculateAttendnacePercentage(row)}%</span>
+    ),
+  };
+}
+
+function calculateAttendnacePercentage(row: any) {
+  if (row.attendance) {
+    let totalDays = Object.keys(row.attendance).length;
+    let presentDays = 0;
+    Object.keys(row.attendance).forEach((key) => {
+      if (row.attendance[key] === "Present") presentDays++;
+    });
+    return Math.round((presentDays / totalDays) * 100);
+  }
+  return 0;
 }
 
 function studentAttendanceStatus(
