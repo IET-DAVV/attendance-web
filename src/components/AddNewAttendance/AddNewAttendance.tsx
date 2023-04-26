@@ -38,6 +38,8 @@ const AddNewAttendance: React.FC<{
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number>(0);
   const [currentStudent, setCurrentStudent] =
     useState<IStudentAttendance | null>(null);
+  const [absentStudents, setAbsentStudents] = useState<Array<String>>([]);
+  const [presentStudents, setPresentStudents] = useState<Array<String>>([]);
 
   const {
     studentsAttendance,
@@ -117,8 +119,51 @@ const AddNewAttendance: React.FC<{
     return currentStudent?.attendance?.[getToday12AMDatetime()];
   }
 
+  function getTotalPresent() {
+    if (!studentsAttendance.length) {
+      return;
+    }
+    for (let i = 0; i < studentsAttendance.length; i++) {
+      const todaysDate = new Date();
+      todaysDate.setHours(0, 0, 0, 0);
+
+      if (
+        studentsAttendance[i].attendance?.[todaysDate.getTime()] === "Present"
+      ) {
+        if (!presentStudents.includes(studentsAttendance[i].name)) {
+          setPresentStudents((presentStudents) => [
+            ...presentStudents,
+            studentsAttendance[i].name,
+          ]);
+        }
+        if (absentStudents.includes(studentsAttendance[i].name)) {
+          setAbsentStudents((absentStudents) =>
+            absentStudents.filter((name) => name !== studentsAttendance[i].name)
+          );
+        }
+      } else if (
+        studentsAttendance[i].attendance?.[todaysDate.getTime()] === "Absent"
+      ) {
+        if (!absentStudents.includes(studentsAttendance[i].name)) {
+          setAbsentStudents((absentStudents) => [
+            ...absentStudents,
+            studentsAttendance[i].name,
+          ]);
+        }
+        if (presentStudents.includes(studentsAttendance[i].name)) {
+          setPresentStudents((presentStudents) =>
+            presentStudents.filter(
+              (name) => name !== studentsAttendance[i].name
+            )
+          );
+        }
+      }
+    }
+  }
+
   useEffect(() => {
     setCurrentStudent(studentsAttendance[currentStudentIndex]);
+    getTotalPresent();
   }, [currentStudentIndex, studentsAttendance]);
 
   const tabOptions = [
@@ -205,7 +250,8 @@ const AddNewAttendance: React.FC<{
   return (
     <Drawer
       title={
-        "New Attendance for " + `${today.day}, ${today.date} ${today.month}`
+        "New Attendance for " +
+        `${currentClassInfo.branch}${currentClassInfo.section}, ${currentClassInfo.subjectCode} [${today.day}, ${today.date} ${today.month}]`
       }
       placement="bottom"
       closable={true}
@@ -228,9 +274,23 @@ const AddNewAttendance: React.FC<{
         type="card"
         items={tabOptions}
         tabBarExtraContent={
-          activeKey === "2" && (
-            <Checkbox onChange={handleClickSelectAll}>Select All</Checkbox>
-          )
+          <div style={{ display: "flex" }}>
+            <div>Total : {studentsAttendance.length}</div>
+            <div style={{ marginLeft: 10 }}>
+              Present : {presentStudents.length}
+            </div>
+            <div style={{ marginLeft: 10 }}>
+              Absent : {absentStudents.length}
+            </div>
+            {activeKey === "2" && (
+              <Checkbox
+                onChange={handleClickSelectAll}
+                style={{ marginLeft: 10 }}
+              >
+                Select All
+              </Checkbox>
+            )}
+          </div>
         }
       />
     </Drawer>
