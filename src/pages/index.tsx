@@ -342,7 +342,7 @@ export default function Home() {
         <CSVLink
           ref={csvBtnRef}
           target="_blank"
-          data={mapAttendanceValues(studentsAttendance)}
+          data={mapAttendanceValues(selectedRows)}
           filename={`attendance-${currentClassInfo.subjectCode}-${currentClassInfo.section}.csv`}
         />
         <AddNewAttendance
