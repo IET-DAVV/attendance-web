@@ -264,6 +264,10 @@ export default function Home() {
     setNewAttendanceDrawer(false);
   }
 
+  async function handleClickEditiAttendance() {
+    setNewAttendanceDrawer(true);
+  }
+
   useEffect(() => {
     if (studentsAttendance?.length) {
     }
@@ -285,13 +289,14 @@ export default function Home() {
           </h3>
           <div className={styles.actionBtns}>
             <div style={{ display: "flex", flexDirection: "row" }}>
-              <Button
+              {/* <Button
                 style={{ marginRight: 15 }}
                 type="default"
                 onClick={() => {}}
+                icon={<EditOutlined />}
               >
                 Edit Attendance
-              </Button>
+              </Button> */}
               <Tooltip
                 title={
                   selectedRows?.length
@@ -375,7 +380,13 @@ function getAttendaceCell(date: Date) {
   let ddmy = getDateDayMonthYear(date.getTime());
   let today = new Date().setHours(0, 0, 0, 0);
   return {
-    title: `${ddmy.day} ${ddmy.date} ${ddmy.month}`,
+    title: () => (
+      <span style={{ position: "relative", width: "100%", display: "block" }}>
+        <Button size="small" type="text">
+          {ddmy.day} {ddmy.date} {ddmy.month} <EditOutlined />
+        </Button>
+      </span>
+    ),
     dataIndex: "attendance",
     key: "attendance",
     date,
