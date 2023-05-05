@@ -54,12 +54,12 @@ const actionMenuItems = [
     icon: <FilePdfOutlined />,
     disabled: true,
   },
-  {
-    key: "3",
-    label: "Edit Attendance",
-    icon: <EditOutlined />,
-    disabled: true,
-  },
+  // {
+  //   key: "3",
+  //   label: "Edit Attendance",
+  //   icon: <EditOutlined />,
+  //   disabled: true,
+  // },
   {
     key: "4",
     label: "Detain Students",
@@ -284,7 +284,14 @@ export default function Home() {
             {currentClassInfo?.id?.replace("_", " ")}
           </h3>
           <div className={styles.actionBtns}>
-            <div>
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              <Button
+                style={{ marginRight: 15 }}
+                type="default"
+                onClick={() => {}}
+              >
+                Edit Attendance
+              </Button>
               <Tooltip
                 title={
                   selectedRows?.length
