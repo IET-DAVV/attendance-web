@@ -104,6 +104,9 @@ const prevColumns = [
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
   const [detainedStudents, setDetainedStudents] = useState([]);
+  const [editAttendanceDate, setEditAttendanceDate] = useState<
+    Date | undefined
+  >(undefined);
   const [currentWeekAttendance, setCurrentWeekAttendance] = useState({});
   const [newAttendanceDrawer, setNewAttendanceDrawer] = useState(false);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
@@ -120,11 +123,17 @@ export default function Home() {
     setStudentsAttendance,
     currentClassInfo,
     academicYear,
+    subjects,
   } = useGlobalContext();
 
   const csvBtnRef = useRef<
     CSVLink & HTMLAnchorElement & { link: HTMLAnchorElement }
   >(null);
+
+  async function handleClickEditiAttendance(date: Date) {
+    setNewAttendanceDrawer(true);
+    setEditAttendanceDate(date);
+  }
 
   const getCurrentDateRangeAttendance = useCallback(async () => {
     setLoading(true);
@@ -141,7 +150,7 @@ export default function Home() {
     setCurrentWeekAttendance(data.data);
     let newDateCols = uniqueDatesOnly(
       Object.keys(data.data)?.map((date) =>
-        getAttendaceCell(new Date(Number(date)))
+        getAttendaceCell(new Date(Number(date)), handleClickEditiAttendance)
       )
     ).sort((a: any, b: any) => a.date - b.date);
 
@@ -264,10 +273,6 @@ export default function Home() {
     setNewAttendanceDrawer(false);
   }
 
-  async function handleClickEditiAttendance() {
-    setNewAttendanceDrawer(true);
-  }
-
   useEffect(() => {
     if (studentsAttendance?.length) {
     }
@@ -361,28 +366,29 @@ export default function Home() {
           open={newAttendanceDrawer}
           submitAttendance={submitAttendance}
           onClose={() => setNewAttendanceDrawer(false)}
+          date={editAttendanceDate}
         />
       </MainLayout>
     </>
   );
 }
 
-function getNewColumnsForCurrentWeek(prevColumns: Array<any>) {
-  let newColumns: any = [
-    ...prevColumns,
-    ...getCurrentWeekDates().map((date) => getAttendaceCell(date)),
-  ];
+// function getNewColumnsForCurrentWeek(prevColumns: Array<any>) {
+//   let newColumns: any = [
+//     ...prevColumns,
+//     ...getCurrentWeekDates().map((date) => getAttendaceCell(date)),
+//   ];
 
-  return newColumns;
-}
+//   return newColumns;
+// }
 
-function getAttendaceCell(date: Date) {
+function getAttendaceCell(date: Date, onClickEdit: (date: Date) => void) {
   let ddmy = getDateDayMonthYear(date.getTime());
   let today = new Date().setHours(0, 0, 0, 0);
   return {
     title: () => (
       <span style={{ position: "relative", width: "100%", display: "block" }}>
-        <Button size="small" type="text">
+        <Button size="small" type="text" onClick={() => onClickEdit(date)}>
           {ddmy.day} {ddmy.date} {ddmy.month} <EditOutlined />
         </Button>
       </span>

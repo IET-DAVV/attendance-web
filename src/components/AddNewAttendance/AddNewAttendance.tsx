@@ -32,8 +32,9 @@ const AddNewAttendance: React.FC<{
   open: boolean;
   onClose: () => void;
   submitAttendance: () => void;
-}> = ({ open, onClose, submitAttendance }) => {
-  const today = getDateDayMonthYear(new Date());
+  date?: Date;
+}> = ({ open, onClose, submitAttendance, date }) => {
+  const today = getDateDayMonthYear(date || new Date());
   const [activeKey, setActiveKey] = useState<string>("1");
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number>(0);
   const [currentStudent, setCurrentStudent] =
@@ -71,7 +72,7 @@ const AddNewAttendance: React.FC<{
     }
     setStudentsAttendance((prev) => {
       let newStudentsAttendance: any = [...prev];
-      let absoluteTime = getToday12AMDatetime();
+      let absoluteTime = getToday12AMDatetime(date);
       let newCurrentStudentIndex = currentStudentIndex;
       if (student?.rollID) {
         newCurrentStudentIndex = newStudentsAttendance.findIndex(
@@ -94,7 +95,7 @@ const AddNewAttendance: React.FC<{
     }
     setStudentsAttendance((prev) => {
       const newStudentsAttendance: any = [...prev];
-      let absoluteTime = getToday12AMDatetime();
+      let absoluteTime = getToday12AMDatetime(date);
       let newCurentStudentIndex = currentStudentIndex;
       if (student?.rollID) {
         newCurentStudentIndex = newStudentsAttendance.findIndex(
@@ -116,7 +117,7 @@ const AddNewAttendance: React.FC<{
   }
 
   function currentStudentAtteandanceStatus() {
-    return currentStudent?.attendance?.[getToday12AMDatetime()];
+    return currentStudent?.attendance?.[getToday12AMDatetime(date)];
   }
 
   function getTotalPresent() {
@@ -124,7 +125,7 @@ const AddNewAttendance: React.FC<{
       return;
     }
     for (let i = 0; i < studentsAttendance.length; i++) {
-      const todaysDate = new Date();
+      const todaysDate = date || new Date();
       todaysDate.setHours(0, 0, 0, 0);
 
       if (
@@ -205,6 +206,7 @@ const AddNewAttendance: React.FC<{
           handleClickPresent={handleClickPresent}
           students={studentsAttendance}
           today={today}
+          date={date}
         />
       ),
     },
@@ -225,6 +227,7 @@ const AddNewAttendance: React.FC<{
           handleClickSelectAll={markAllAttendance}
           students={studentsAttendance}
           today={today}
+          date={date}
         />
       ),
     },
@@ -232,7 +235,7 @@ const AddNewAttendance: React.FC<{
 
   function markAllAttendance(status: "Present" | "Absent") {
     setStudentsAttendance((prev) => {
-      let absoluteTime = getToday12AMDatetime();
+      let absoluteTime = getToday12AMDatetime(date);
       return prev.map((student: IStudentAttendance) => ({
         ...student,
         attendance: {
