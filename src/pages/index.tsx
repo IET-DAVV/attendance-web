@@ -40,6 +40,8 @@ import { useGlobalContext } from "@/utils/context/GlobalContext";
 import { CSVLink } from "react-csv";
 import { IStudentAttendance } from "@/utils/interfaces";
 const { RangePicker } = DatePicker;
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import TablePDF from "@/components/TablePDF";
 
 // items arr for exporting and marking attendance
 const actionMenuItems = [
@@ -52,7 +54,6 @@ const actionMenuItems = [
     key: "2",
     label: "Export PDF",
     icon: <FilePdfOutlined />,
-    disabled: true,
   },
   // {
   //   key: "3",
@@ -108,7 +109,9 @@ export default function Home() {
   const [newAttendanceDrawer, setNewAttendanceDrawer] = useState(false);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [editAttendanceMode, setEditAttendanceMode] = useState(false);
+  const [isClientSide, setIsClientSide] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isClickedOnExportPDF, setIsClickedOnExportPDF] = useState(false);
   const [currentDateRange, setCurrentDateRange] = useState<any>([
     dayjs(getCurrentWeekDates()[0]),
     dayjs(getCurrentWeekDates()[5]),
@@ -189,6 +192,11 @@ export default function Home() {
       message.error(error.message);
     }
   }
+  useEffect(() => {
+    if (window && !isClientSide) {
+      setIsClientSide(true);
+    }
+  });
 
   async function handleSubmitAttendance() {
     const { absentStudents, presentStudents, date, subjectCode, classID } =
@@ -239,6 +247,9 @@ export default function Home() {
     if (e.key === "1") {
       if (csvBtnRef.current) csvBtnRef?.current?.link?.click();
     }
+    if (e.key === "2") {
+      setIsClickedOnExportPDF(true);
+    }
     if (e.key === "3") {
       setEditAttendanceMode(true);
     }
@@ -269,9 +280,15 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (studentsAttendance?.length) {
+    if (isClickedOnExportPDF && isClientSide) {
+      const pdfBtnContainer = document.getElementById("pdfBtnContainer");
+      setTimeout(() => {
+        const a = pdfBtnContainer?.querySelector("a");
+        a?.click();
+      }, 1000);
+      // setIsClickedOnExportPDF(false);
     }
-  }, [studentsAttendance]);
+  });
 
   return (
     <>
@@ -287,6 +304,41 @@ export default function Home() {
             {currentClassInfo?.subjectCode} |{" "}
             {currentClassInfo?.id?.replace("_", " ")}
           </h3>
+          <div id="pdfBtnContainer">
+            {isClientSide && isClickedOnExportPDF && columns.length && (
+              <PDFDownloadLink
+                className="test"
+                document={
+                  <TablePDF
+                    headers={columns?.map((column: any) =>
+                      typeof column.title === "string"
+                        ? column.title
+                        : `${getDateDayMonthYear(column.date).date}/${
+                            getDateDayMonthYear(column.date).month
+                          }/${getDateDayMonthYear(column.date).year}`
+                    )}
+                    data={selectedRows?.map((row) => [
+                      row.rollID,
+                      row.enrollmentID,
+                      row.name,
+                      ...columns
+                        ?.filter((column) => column.date)
+                        .map((column: any) => {
+                          return (
+                            row.attendance?.[column.date.getTime()] || "NA"
+                          );
+                        }),
+                      calculateAttendnacePercentage(row),
+                    ])}
+                    classInfo={""}
+                  />
+                }
+                fileName="attendance.pdf"
+              >
+                Download
+              </PDFDownloadLink>
+            )}
+          </div>
           <div className={styles.actionBtns}>
             <div style={{ display: "flex", flexDirection: "row" }}>
               {/* <Button
@@ -335,6 +387,7 @@ export default function Home() {
             </Button>
           </div>
         </div>
+
         <div className={styles.tableContainer}>
           <Table
             bordered
@@ -479,3 +532,7 @@ function studentAttendanceStatus(
     attendance: newAttendance,
   };
 }
+
+Home.getInitialProps = async () => {
+  return {}; // Return an empty object to disable server-side rendering
+};
