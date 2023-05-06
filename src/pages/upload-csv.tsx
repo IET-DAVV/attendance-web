@@ -1,10 +1,9 @@
-import { constantsServices, studentServices } from "@/utils/api/services";
+import facultyServices from "@/utils/api/services/faculties";
 import { useState } from "react";
 
 export default function CsvReader() {
   const [csvFile, setCsvFile] = useState<any>();
   const [csvArray, setCsvArray] = useState([]);
-  // [{name: "", age: 0, rank: ""},{name: "", age: 0, rank: ""}]
 
   const processCSV = (str: any, delim = ",") => {
     const headers = str.slice(0, str.indexOf("\n")).split(delim);
@@ -19,7 +18,7 @@ export default function CsvReader() {
       return eachObject;
     });
     setCsvArray(newArray);
-    addingStudents(newArray);
+    addingFaculty(newArray);
   };
 
   const submit = () => {
@@ -62,15 +61,19 @@ export default function CsvReader() {
           <table>
             <thead>
               <th>Name</th>
-              <th>Age</th>
-              <th>Rank</th>
+              <th>Email</th>
+              <th>Branch ID</th>
+              <th>Designation</th>
+              <th>Faculty Type</th>
             </thead>
             <tbody>
               {csvArray.map((item: any, i) => (
                 <tr key={i}>
                   <td>{item.name}</td>
-                  <td>{item.age}</td>
-                  <td>{item.rank}</td>
+                  <td>{item.email}</td>
+                  <td>{item.branchID}</td>
+                  <td>{item.designation}</td>
+                  <td>{item.facultyType}</td>
                 </tr>
               ))}
             </tbody>
@@ -81,121 +84,65 @@ export default function CsvReader() {
   );
 }
 
-function addingStudents(newArray: Array<any>) {
-  let branches: any = {};
-  function getBranch(rno: string) {
-    if (rno?.includes("I")) {
-      return "IT";
-    }
-    if (rno?.includes("C")) {
-      return "CS";
-    }
-    if (rno?.includes("E")) {
-      return "EI";
-    }
-    if (rno?.includes("M")) {
-      return "ME";
-    }
-    if (rno?.includes("A")) {
-      return "AS";
-    }
-    if (rno?.includes("T")) {
-      return "ETC";
-    }
-    if (rno?.includes("V")) {
-      return "CIV";
-    }
-  }
-  function generateEmail(rno: string) {
-    const year = rno?.slice(0, 2);
-    const branch = getBranch(rno);
-    const last3 = rno?.slice(4);
-    return `${year}b${branch?.toLowerCase()}${last3}@ietdavv.edu.in`;
-  }
-  newArray.forEach((item: any) => {
-    const branchID: any = getBranch(item.roll_no);
-    const enrollmentYear = parseInt("20" + item.roll_no?.slice(0, 2));
-    let section = "NA";
-    let docId = `${enrollmentYear}_${branchID}`;
-    if (["CS", "IT", "ETC"].includes(branchID)) {
-      section = item.roll_no.slice(4)[0] === "0" ? "A" : "B";
-    }
-    let keyId = `${enrollmentYear}_${branchID}`;
-    if (["A", "B"].includes(section)) {
-      keyId += `_${section}`;
-      docId += `_${section}`;
-    }
+function removePrefix(name: string): string {
+  const prefixes = [
+    "MR.",
+    "MS.",
+    "Dr.",
+    "Dr",
+    "DR.",
+    "PROF.",
+    "MRS.",
+    "Miss",
+    "MR",
+    "MS",
+  ];
+  let newName = name.trim();
 
-    if (!branches[docId]) {
-      branches[docId] = {
-        branchID,
-        enrollmentYear,
-        section,
-        students: {
-          [item.enroll_no]: {
-            rollID: item.roll_no,
-            name: item.name,
-            email: generateEmail(item.roll_no),
-            enrollmentID: item.enroll_no,
-          },
-        },
-      };
-    } else {
-      branches[docId].students[item.enroll_no] = {
-        rollID: item.roll_no,
-        name: item.name,
-        email: generateEmail(item.roll_no),
-        enrollmentID: item.enroll_no,
-      };
+  prefixes.forEach((prefix) => {
+    if (newName.toUpperCase().startsWith(prefix.toUpperCase())) {
+      newName = newName.substring(prefix.length).trim();
     }
   });
-  console.log(branches);
-  async function addStudents(data: any) {
-    const res = await studentServices.addNewStudentsMultiple(data);
-    console.log(res);
-  }
-  addStudents(Object.values(branches));
+
+  return newName;
 }
 
-function addingBranch(newArray: Array<any>) {
-  async function addBranches(data: any) {
-    const res = await constantsServices.addNewBranchMultiple(data);
+function getBranchID(branchName: string): string {
+  const branchMap: Record<string, string> = {
+    "Computer Engineering": "CS",
+    "Electronic & Telecommunication": "ETC",
+    "Information Technology": "IT",
+    "Civil Engineering": "CIV",
+    Civil: "CIV",
+    "Electronics & Telecommunication": "ETC",
+    "Applied Science": "AS",
+    "Electronics & Instrumentation": "EI",
+    "Elec. & Instru.": "EI",
+    "Mechanical Engineering": "ME",
+  };
+
+  return branchMap[branchName.trim()] || "";
+}
+
+function addingFaculty(newArray: Array<any>) {
+  async function addFaculty(data: any) {
+    const res = await facultyServices.addNewFacultyMultiple(data);
     console.log(res);
   }
 
-  let branches: any = {};
-  const branchIDs: any = {
-    "Mechanical Engineering": "ME",
-    "Computer Engineering": "CS",
-    "Civil Engineering": "CIV",
-    "Electronics & Instrumentation": "EI",
-    "Electronics & Telecommunication": "ETC",
-    "Information Technology": "IT",
-    "Applied Science": "AS",
-  };
-  newArray.forEach((item: any) => {
-    const branchID = branchIDs[item.branch];
-    if (!branches[branchID]) {
-      branches[branchID] = {
-        branchID,
-        branchName: item.branch?.trim(),
-        course: item.course?.trim(),
-        subjects: {
-          [item.subject_code]: {
-            subjectCode: item.subject_code?.trim(),
-            subjectName: item.subject_name?.trim(),
-            sem: parseInt(item.semester),
-          },
-        },
-      };
-    } else {
-      branches[branchID].subjects[item.subject_code] = {
-        subjectCode: item.subject_code?.trim(),
-        subjectName: item.subject_name?.trim(),
-        sem: parseInt(item.semester),
-      };
-    }
+  const facultyList = newArray.map((item: any) => {
+    const cleanName = removePrefix(item.name);
+    const branchID = getBranchID(item.branch);
+    return {
+      name: cleanName,
+      email: item.email,
+      branchID: branchID,
+      designation: item.designation,
+      facultyType: "Regular",
+    };
   });
-  console.log(branches);
-  addBranches(branches);
+
+  console.log(facultyList);
+  addFaculty(facultyList);
 }

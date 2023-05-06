@@ -38,6 +38,7 @@ async function createFacultyMultiple(data: Array<any>) {
     }`;
     const documentRef = doc(collectionRef, docId);
     batch.set(documentRef, {
+      id: docId,
       ...branchDoc,
     });
   });

@@ -43,4 +43,23 @@
   > div > div {
     height: 100%;
   }
+  .cellItem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    border: 1px solid var(--clr-gray-light);
+    border-radius: 0.3rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    transition: all 0.2s ease-in-out;
+    &:hover {
+      background-color: var(--clr-gray-light);
+    }
+  }
+}
+.formContainer {
+  margin-top: 1rem;
 }

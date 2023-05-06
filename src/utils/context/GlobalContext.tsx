@@ -86,6 +86,22 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     currentClassInfo.section,
   ]);
 
+  useEffect(() => {
+    if (branches) {
+      let tempSubjects: Array<ISubject> = [];
+      branches?.forEach((branch: IBranch) => {
+        tempSubjects = [
+          ...tempSubjects,
+          ...Object.values(branch.subjects)?.map((sub) => ({
+            ...sub,
+            branchID: branch.branchID,
+          })),
+        ];
+      });
+      setSubjects(tempSubjects);
+    }
+  }, [branches]);
+
   return (
     <GlobalContext.Provider
       value={{

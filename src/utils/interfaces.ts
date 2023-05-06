@@ -34,7 +34,7 @@ export interface ISubject {
   subjectName: string;
   sem: number;
   course?: string;
-  branchCode?: string;
+  branchID?: string;
 }
 
 export interface ICurrentClassInfo {
@@ -56,6 +56,7 @@ export interface IBranch {
 }
 
 export interface IFaculty {
+  id: string;
   branchID: string;
   designation: string;
   email: string;
