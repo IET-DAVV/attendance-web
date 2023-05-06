@@ -25,6 +25,7 @@ interface Props {
   };
   currentStudent: IStudentAttendance | null;
   currentStudentIndex: number;
+  date?: Date;
   handleClickAbsent: () => void;
   handleClickPresent: () => void;
   handleClickNavigate: (direction: "prev" | "next") => void;
@@ -42,7 +43,10 @@ const SingleView: React.FC<Props> = ({
   handleClickPresent,
   handleClickNavigate,
   getNewIndex,
+  date,
 }) => {
+  const today12AMDateTime = getToday12AMDatetime(date);
+
   return (
     <div className={styles.singleViewContainer}>
       <div
@@ -105,10 +109,9 @@ const SingleView: React.FC<Props> = ({
         <div
           className={clsx(
             styles.actionBtns,
-            currentStudent?.attendance?.[getToday12AMDatetime()] === "Absent"
+            currentStudent?.attendance?.[today12AMDateTime] === "Absent"
               ? styles.absent
-              : currentStudent?.attendance?.[getToday12AMDatetime()] ===
-                "Present"
+              : currentStudent?.attendance?.[today12AMDateTime] === "Present"
               ? styles.present
               : ""
           )}

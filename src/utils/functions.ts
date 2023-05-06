@@ -33,8 +33,9 @@ export function getYear(
   }
 }
 
-export function getToday12AMDatetime() {
-  const today = new Date();
+export function getToday12AMDatetime(date?: Date) {
+  const today = date || new Date();
+  console.log(today);
   // reset time to 12am
   today.setHours(0, 0, 0, 0);
   return today.getTime();

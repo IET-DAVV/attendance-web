@@ -16,6 +16,7 @@ interface Props {
     month: string;
   };
   students: IStudentAttendance[];
+  date?: Date;
   handleClickAbsent: (student: IStudentAttendance) => void;
   handleClickPresent: (student: IStudentAttendance) => void;
 }
@@ -25,7 +26,10 @@ const GridView: React.FC<Props> = ({
   students,
   handleClickAbsent,
   handleClickPresent,
+  date,
 }) => {
+  const today12AMDateTime = getToday12AMDatetime(date);
+
   return (
     <div className={styles.gridContainer}>
       {students.map((student, index) => (
@@ -33,18 +37,16 @@ const GridView: React.FC<Props> = ({
           key={index}
           className={clsx(
             styles.gridViewCard,
-            student.attendance?.[getToday12AMDatetime()] === "Absent"
+            student.attendance?.[today12AMDateTime] === "Absent"
               ? styles.absent
-              : student.attendance?.[getToday12AMDatetime()] === "Present"
+              : student.attendance?.[today12AMDateTime] === "Present"
               ? styles.present
               : ""
           )}
           onClick={() => {
-            if (student.attendance?.[getToday12AMDatetime()] === "Present") {
+            if (student.attendance?.[today12AMDateTime] === "Present") {
               handleClickAbsent(student);
-            } else if (
-              student.attendance?.[getToday12AMDatetime()] === "Absent"
-            ) {
+            } else if (student.attendance?.[today12AMDateTime] === "Absent") {
               handleClickPresent(student);
             } else {
               handleClickPresent(student);
@@ -54,9 +56,9 @@ const GridView: React.FC<Props> = ({
           <span
             className={clsx(
               styles.statusIndicator,
-              student.attendance?.[getToday12AMDatetime()] === "Absent"
+              student.attendance?.[today12AMDateTime] === "Absent"
                 ? styles.absent
-                : student.attendance?.[getToday12AMDatetime()] === "Present"
+                : student.attendance?.[today12AMDateTime] === "Present"
                 ? styles.present
                 : ""
             )}
@@ -65,19 +67,18 @@ const GridView: React.FC<Props> = ({
             <div className={styles.studentInfo}>
               <h3>{student.name}</h3>
               <p>{student.rollID}</p>
-              {student.attendance?.[getToday12AMDatetime()] && (
+              {student.attendance?.[today12AMDateTime] && (
                 <Tag
                   style={{ marginTop: "0.5rem" }}
                   color={
-                    student.attendance?.[getToday12AMDatetime()] === "Absent"
+                    student.attendance?.[today12AMDateTime] === "Absent"
                       ? "red"
-                      : student.attendance?.[getToday12AMDatetime()] ===
-                        "Present"
+                      : student.attendance?.[today12AMDateTime] === "Present"
                       ? "green"
                       : ""
                   }
                 >
-                  {student.attendance?.[getToday12AMDatetime()]}
+                  {student.attendance?.[today12AMDateTime]}
                 </Tag>
               )}
             </div>

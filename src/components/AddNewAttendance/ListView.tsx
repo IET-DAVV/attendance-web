@@ -31,6 +31,7 @@ interface Props {
     month: string;
   };
   students: IStudentAttendance[];
+  date?: Date;
   handleClickAbsent: (student: IStudentAttendance) => void;
   handleClickPresent: (student: IStudentAttendance) => void;
   handleClickSelectAll: (status: "Present" | "Absent") => void;
@@ -42,7 +43,10 @@ const ListView: React.FC<Props> = ({
   handleClickAbsent,
   handleClickPresent,
   handleClickSelectAll,
+  date,
 }) => {
+  const today12AMDateTime = getToday12AMDatetime(date);
+
   const columns: any = [
     {
       title: "Roll No",
@@ -65,14 +69,14 @@ const ListView: React.FC<Props> = ({
           <Tag
             style={{ marginTop: "0.5rem" }}
             color={
-              student.attendance?.[getToday12AMDatetime()] === "Absent"
+              student.attendance?.[today12AMDateTime] === "Absent"
                 ? "red"
-                : student.attendance?.[getToday12AMDatetime()] === "Present"
+                : student.attendance?.[today12AMDateTime] === "Present"
                 ? "green"
                 : ""
             }
           >
-            {student.attendance?.[getToday12AMDatetime()]}
+            {student.attendance?.[today12AMDateTime]}
           </Tag>
         );
       },
