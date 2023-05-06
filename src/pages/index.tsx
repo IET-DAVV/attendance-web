@@ -4,6 +4,8 @@ import { attendanceServices, studentServices } from "@/utils/api/services";
 import {
   getCurrentWeekDates,
   getDateDayMonthYear,
+  getTableFilters,
+  getTableSorter,
   getToday12AMDatetime,
   getTotalDaysCountInCurrentMonth,
   mapAttendanceValues,
@@ -179,6 +181,7 @@ export default function Home() {
         title: "Roll No.",
         dataIndex: "rollID",
         key: "rollID",
+        ...getTableSorter("rollID"),
       },
       {
         title: "Enroll No.",
@@ -189,6 +192,7 @@ export default function Home() {
         title: "Name",
         dataIndex: "name",
         key: "name",
+        ...getTableSorter("name"),
         render: (text: string) => (
           <span
             style={{
@@ -258,7 +262,10 @@ export default function Home() {
       </Head>
       <MainLayout className={styles.main}>
         <div className={styles.flexRow}>
-          <h3>IET Attendance</h3>
+          <h3>
+            {currentClassInfo?.subjectCode} |{" "}
+            {currentClassInfo?.id?.replace("_", " ")}
+          </h3>
           <div className={styles.actionBtns}>
             <div>
               <Tooltip
@@ -341,6 +348,7 @@ function getNewColumnsForCurrentWeek(prevColumns: Array<any>) {
         dataIndex: "attendance",
         key: "attendance",
         className: today === date.getTime() ? styles.today : "",
+
         render: (text: any) => {
           let attendanceStatus = text?.[date.getTime()];
           return (

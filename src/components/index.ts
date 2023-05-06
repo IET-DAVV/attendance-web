@@ -1,1 +1,2 @@
-export { default as WeeklyCalendar } from "./WeeklyCalendar/";
+// export { default as CustomTable } from "./CustomTable/CustomTable";
+export const Tab = {};
