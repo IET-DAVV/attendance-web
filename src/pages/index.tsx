@@ -290,8 +290,8 @@ export default function Home() {
       setTimeout(() => {
         const a = pdfBtnContainer?.querySelector("a");
         a?.click();
+        setIsClickedOnExportPDF(false);
       }, 1000);
-      // setIsClickedOnExportPDF(false);
     }
   });
 
@@ -309,7 +309,7 @@ export default function Home() {
             {currentClassInfo?.subjectCode} |{" "}
             {currentClassInfo?.id?.replace("_", " ")}
           </h3>
-          <div id="pdfBtnContainer">
+          <div style={{ visibility: "hidden" }} id="pdfBtnContainer">
             {isClientSide && isClickedOnExportPDF && columns.length && (
               <PDFDownloadLink
                 className="test"
