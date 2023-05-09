@@ -42,6 +42,7 @@ import { IStudentAttendance } from "@/utils/interfaces";
 const { RangePicker } = DatePicker;
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import TablePDF from "@/components/TablePDF";
+import DetainStudents from "./detainStudents";
 
 // items arr for exporting and marking attendance
 const actionMenuItems = [
@@ -65,7 +66,6 @@ const actionMenuItems = [
     key: "4",
     label: "Detain Students",
     icon: <UserDeleteOutlined />,
-    disabled: true,
   },
 ];
 
@@ -115,6 +115,8 @@ export default function Home() {
   const [isClientSide, setIsClientSide] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isClickedOnExportPDF, setIsClickedOnExportPDF] = useState(false);
+  const [detainedStudentModel, setDetainStudentModel] = useState(false);
+  const [exam, setExam] = useState();
   const [currentDateRange, setCurrentDateRange] = useState<any>([
     dayjs(getCurrentWeekDates()[0]),
     dayjs(getCurrentWeekDates()[5]),
@@ -261,6 +263,9 @@ export default function Home() {
     }
     if (e.key === "3") {
       setEditAttendanceMode(true);
+    }
+    if (e.key === "4") {
+      setDetainStudentModel(true);
     }
   };
 
@@ -420,6 +425,18 @@ export default function Home() {
           submitAttendance={submitAttendance}
           onClose={() => setNewAttendanceDrawer(false)}
           date={editAttendanceDate}
+        />
+        <DetainStudents
+          isModalOpen={detainedStudentModel}
+          handleOk={() => {
+            //handleSubmit();
+            setDetainStudentModel(false);
+          }}
+          handleCancel={() => {
+            setDetainStudentModel(false);
+          }}
+          setExam={setExam}
+          students={selectedRows.length}
         />
       </MainLayout>
     </>
