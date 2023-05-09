@@ -3,6 +3,7 @@ import { Document, View, Page, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   table: {
+    // @ts-ignore
     display: "table",
     width: "571px",
     borderStyle: "solid",
