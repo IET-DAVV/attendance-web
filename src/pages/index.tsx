@@ -42,7 +42,7 @@ import { IStudentAttendance } from "@/utils/interfaces";
 const { RangePicker } = DatePicker;
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import TablePDF from "@/components/TablePDF";
-import DetainStudents from "./detainStudents";
+import DetainStudents from "../components/detainStudents";
 
 // items arr for exporting and marking attendance
 const actionMenuItems = [
