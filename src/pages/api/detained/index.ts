@@ -95,6 +95,52 @@ async function markAsDetained(
   });
 }
 
+async function markAsDetainedMultiple(
+  year: string,
+  subjectCode: string,
+  classId: string,
+  exam: string,
+  studentIds: string[]
+) {
+  const collectionRef = collection(
+    database,
+    "attendance",
+    year,
+    "subjects",
+    subjectCode,
+    "classes"
+  );
+  const docRef = doc(collectionRef, classId);
+  const snapshot = await getDoc(docRef);
+
+  let allDetained: {
+    [key: string]: string[];
+  } = {};
+  const detained = await snapshot.data()?.detained;
+  if (detained) {
+    allDetained = detained;
+  }
+
+  if (!allDetained[exam]) {
+    allDetained[exam] = [];
+  }
+
+  var uniqueDetainedStudents = [];
+  for (var i = 0; i < studentIds.length; i++) {
+    if (!allDetained[exam].includes(studentIds[i])) {
+      uniqueDetainedStudents.push(studentIds[i]);
+    }
+  }
+
+  allDetained = {
+    ...allDetained,
+    [exam]: [...allDetained[exam], ...uniqueDetainedStudents],
+  };
+  await updateDoc(docRef, {
+    detained: allDetained,
+  });
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response>
