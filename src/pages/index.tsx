@@ -115,8 +115,8 @@ export default function Home() {
   const [isClientSide, setIsClientSide] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isClickedOnExportPDF, setIsClickedOnExportPDF] = useState(false);
-  const [detainedStudentModel, setDetainStudentModel] = useState(false);
-  const [exam, setExam] = useState();
+  const [detainedStudentModal, setDetainStudentModal] = useState(false);
+  const [exam, setExam] = useState("");
   const [currentDateRange, setCurrentDateRange] = useState<any>([
     dayjs(getCurrentWeekDates()[0]),
     dayjs(getCurrentWeekDates()[5]),
@@ -265,7 +265,7 @@ export default function Home() {
       setEditAttendanceMode(true);
     }
     if (e.key === "4") {
-      setDetainStudentModel(true);
+      setDetainStudentModal(true);
     }
   };
 
@@ -287,6 +287,31 @@ export default function Home() {
   async function submitAttendance() {
     await handleSubmitAttendance();
     setNewAttendanceDrawer(false);
+  }
+
+  async function handleClickDetainStudents() {
+    const loadingMessage = message.loading(
+      "Detaining " + selectedRows.length + " students",
+      0
+    );
+    try {
+      if (!selectedRows?.length)
+        throw new Error("Please select atleast one student");
+      if (!exam.length) throw new Error("Please select an exam");
+      await attendanceServices.detainStudentFromExamMultiple(
+        academicYear,
+        currentClassInfo.subjectCode,
+        currentClassInfo.id,
+        exam,
+        selectedRows?.map((st) => st.enrollmentID) as string[]
+      );
+      loadingMessage();
+      message.success(selectedRows.length + " students detained");
+      setDetainStudentModal(false);
+    } catch (error: any) {
+      loadingMessage();
+      message.error(error.message);
+    }
   }
 
   useEffect(() => {
@@ -427,13 +452,13 @@ export default function Home() {
           date={editAttendanceDate}
         />
         <DetainStudents
-          isModalOpen={detainedStudentModel}
+          isModalOpen={detainedStudentModal}
           handleOk={() => {
             //handleSubmit();
-            setDetainStudentModel(false);
+            handleClickDetainStudents();
           }}
           handleCancel={() => {
-            setDetainStudentModel(false);
+            setDetainStudentModal(false);
           }}
           setExam={setExam}
           students={selectedRows.length}

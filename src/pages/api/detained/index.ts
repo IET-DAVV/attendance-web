@@ -53,7 +53,7 @@ async function getDetained(
 }
 
 async function markAsDetained(
-  year: string,
+  academicYear: string,
   subjectCode: string,
   classId: string,
   exam: string,
@@ -62,7 +62,7 @@ async function markAsDetained(
   const collectionRef = collection(
     database,
     "attendance",
-    year,
+    academicYear,
     "subjects",
     subjectCode,
     "classes"
@@ -83,7 +83,7 @@ async function markAsDetained(
   }
 
   if (allDetained[exam].includes(studentId)) {
-    return;
+    return false; // student already marked as detained
   }
 
   allDetained = {
@@ -93,10 +93,11 @@ async function markAsDetained(
   await updateDoc(docRef, {
     detained: allDetained,
   });
+  return true;
 }
 
 async function markAsDetainedMultiple(
-  year: string,
+  academicYear: string,
   subjectCode: string,
   classId: string,
   exam: string,
@@ -105,7 +106,7 @@ async function markAsDetainedMultiple(
   const collectionRef = collection(
     database,
     "attendance",
-    year,
+    academicYear,
     "subjects",
     subjectCode,
     "classes"
@@ -125,20 +126,17 @@ async function markAsDetainedMultiple(
     allDetained[exam] = [];
   }
 
-  var uniqueDetainedStudents = [];
-  for (var i = 0; i < studentIds.length; i++) {
+  for (let i = 0; i < studentIds.length; i++) {
     if (!allDetained[exam].includes(studentIds[i])) {
-      uniqueDetainedStudents.push(studentIds[i]);
+      allDetained[exam].push(studentIds[i]);
     }
   }
 
-  allDetained = {
-    ...allDetained,
-    [exam]: [...allDetained[exam], ...uniqueDetainedStudents],
-  };
   await updateDoc(docRef, {
     detained: allDetained,
   });
+
+  return true;
 }
 
 export default async function handler(
@@ -153,25 +151,50 @@ export default async function handler(
         return res.status(200).json({ data: detained, status: "success" });
       }
       case "POST": {
-        const { academicYear, subjectCode, exam, studentId, classId } =
-          req.body;
-        const isMarked = await markAsDetained(
+        const {
           academicYear,
           subjectCode,
-          classId,
           exam,
-          studentId
-        );
-        if (!Boolean(isMarked)) {
+          studentId,
+          studentIds,
+          classId,
+        } = req.body;
+        if (studentId && !studentIds) {
+          const isMarked = await markAsDetained(
+            academicYear,
+            subjectCode,
+            classId,
+            exam,
+            studentId
+          );
+          if (!isMarked) {
+            return res.status(200).json({
+              status: "success",
+              message: "Student already marked as detained",
+            });
+          }
           return res.status(200).json({
             status: "success",
-            message: "Student already marked as detained",
+            message: "Student marked as detained",
+          });
+        } else if (studentIds && !studentId) {
+          await markAsDetainedMultiple(
+            academicYear,
+            subjectCode,
+            classId,
+            exam,
+            studentIds
+          );
+          return res.status(200).json({
+            status: "success",
+            message: "Student marked as detained",
+          });
+        } else {
+          return res.status(400).json({
+            status: "error",
+            error: "Invalid request",
           });
         }
-        return res.status(200).json({
-          status: "success",
-          message: "Student marked as detained",
-        });
       }
       default:
         return res.status(405).end();

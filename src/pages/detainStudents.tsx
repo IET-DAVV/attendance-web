@@ -13,6 +13,8 @@ const AddSubjects: React.FC<{
       title="Detain Students"
       open={isModalOpen}
       onOk={handleOk}
+      okText="Yes, Detain"
+      okButtonProps={{ danger: true }}
       onCancel={handleCancel}
     >
       <Space direction="vertical">
@@ -38,10 +40,10 @@ const AddSubjects: React.FC<{
               placeholder="Select exam type"
               allowClear
               options={[
-                { value: "1", label: "MST 1" },
-                { value: "2", label: "MST 2" },
-                { value: "3", label: "MST 3" },
-                { value: "4", label: "END SEM" },
+                { value: "mst1", label: "MST 1" },
+                { value: "mst2", label: "MST 2" },
+                { value: "mst3", label: "MST 3" },
+                { value: "endSem", label: "END SEM" },
               ]}
               onChange={(data) => {
                 setExam(data);

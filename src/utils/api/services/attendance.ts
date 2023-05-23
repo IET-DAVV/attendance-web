@@ -14,14 +14,32 @@ async function getDetainedStudents(
 async function detainStudentFromExam(
   academicYear: string,
   subjectCode: string,
+  classId: string,
   exam: string,
   studentId: string
 ) {
   return await API.post("/detained", {
     academicYear,
     subjectCode,
+    classId,
     exam,
     studentId,
+  });
+}
+
+async function detainStudentFromExamMultiple(
+  academicYear: string,
+  subjectCode: string,
+  classId: string,
+  exam: string,
+  studentIds: string[]
+) {
+  return await API.post("/detained", {
+    academicYear,
+    subjectCode,
+    classId,
+    exam,
+    studentIds,
   });
 }
 
@@ -147,6 +165,7 @@ const attendanceServices = {
   getStudentDetainedInSubjects,
   getIsStudentDetainedInSubject,
   getStudentsAttendanceInDateRange,
+  detainStudentFromExamMultiple,
 };
 
 export default attendanceServices;
