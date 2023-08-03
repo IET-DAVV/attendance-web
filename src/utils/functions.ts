@@ -147,7 +147,8 @@ export function getTableFilters<T extends Record<string, string>>(
   return {
     filters: options,
     onFilter: (value: string, record: T) => {
-      return record?.[dataIndex]?.indexOf(value) === 0;
+      console.log(record?.[dataIndex]?.indexOf(value));
+      return record?.[dataIndex]?.indexOf(value) !== -1;
     },
   };
 }
