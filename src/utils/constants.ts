@@ -19,6 +19,13 @@ export const BRANCH_TABLE_FILTER: any = getTableFilters(
   })),
   "branchID"
 );
+export const EXAM_TABLE_FILTER: any = getTableFilters(
+  ["MST1", "MST2", "MST3", "ENDSEM"].map((exam) => ({
+    text: exam,
+    value: exam,
+  })),
+  "detainedIn"
+);
 
 export const SECTION_TABLE_FILTER: any = getTableFilters(
   ["A", "B"].map((section) => ({

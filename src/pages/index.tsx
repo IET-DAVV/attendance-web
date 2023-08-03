@@ -43,6 +43,7 @@ const { RangePicker } = DatePicker;
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import TablePDF from "@/components/TablePDF";
 import DetainStudents from "../components/detainStudents";
+import { EXAM_TABLE_FILTER } from "@/utils/constants";
 
 // items arr for exporting and marking attendance
 const actionMenuItems = [
@@ -88,8 +89,6 @@ export default function Home() {
     dayjs(getCurrentWeekDates()[0]),
     dayjs(getCurrentWeekDates()[5]),
   ]);
-
-  const [columns, setColumns] = useState<Array<any>>([]);
   const {
     studentsAttendance,
     setStudentsAttendance,
@@ -97,6 +96,8 @@ export default function Home() {
     academicYear,
     subjects,
   } = useGlobalContext();
+
+  const [columns, setColumns] = useState<Array<any>>([]);
   console.log({ studentsAttendance });
   const csvBtnRef = useRef<
     CSVLink & HTMLAnchorElement & { link: HTMLAnchorElement }
@@ -124,11 +125,6 @@ export default function Home() {
       width: 200,
       ...getTableSorter("name"),
       render: (text: string, record: any) => {
-        console.log(
-          detainedStudents,
-          record,
-          detainedStudents[record.enrollmentID]
-        );
         return (
           <span
             style={{
@@ -140,10 +136,8 @@ export default function Home() {
             }}
           >
             {text.toLowerCase()}
-            {detainedStudents[record.enrollmentID]?.length > 0 && (
-              <Tooltip
-                title={detainedStudents[record.enrollmentID].join(" , ")}
-              >
+            {record?.detainedIn?.length > 0 && (
+              <Tooltip title={record?.detainedIn?.join(" , ")}>
                 <Tag
                   style={{
                     cursor: "pointer",
@@ -156,6 +150,21 @@ export default function Home() {
             )}
           </span>
         );
+      },
+    },
+    {
+      title: "Detained in",
+      key: "detainedIn",
+      dataIndex: "detainedIn",
+      width: 250,
+      ...EXAM_TABLE_FILTER,
+      render: (detainedExams: Array<string> | undefined, record: any) => {
+        if (detainedExams?.length == 0) {
+          return <span>NA</span>;
+        }
+        return detainedExams?.map((exam: string) => (
+          <Tag color="blue">{exam}</Tag>
+        ));
       },
     },
   ];
@@ -204,7 +213,6 @@ export default function Home() {
       modifiedDetainedList = convertDetainedStudentsToMap(res.data.data);
       console.log(modifiedDetainedList);
       setDetainedStudents(modifiedDetainedList);
-      console.log("detained students", res.data);
     };
     fetchDetainedStudents();
   }, []);
@@ -393,6 +401,18 @@ export default function Home() {
       }, 1000);
     }
   });
+  console.log(studentsAttendance);
+  let studentsAttendanceWithDetention = studentsAttendance.map(
+    (student: any) => {
+      if (detainedStudents[student.enrollmentID]) {
+        return {
+          ...student,
+          detainedIn: detainedStudents[student.enrollmentID],
+        };
+      }
+      return { ...student, detainedIn: [] };
+    }
+  );
 
   return (
     <>
@@ -504,7 +524,7 @@ export default function Home() {
               ...rowSelection,
             }}
             columns={columns}
-            dataSource={studentsAttendance}
+            dataSource={studentsAttendanceWithDetention}
             scroll={{
               x: 1000,
               y: 500,
