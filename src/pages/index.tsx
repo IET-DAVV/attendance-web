@@ -162,8 +162,10 @@ export default function Home() {
         if (detainedExams?.length == 0) {
           return <span>NA</span>;
         }
-        return detainedExams?.map((exam: string) => (
-          <Tag color="blue">{exam}</Tag>
+        return detainedExams?.map((exam: string, idx: number) => (
+          <Tag key={idx} color="blue">
+            {exam}
+          </Tag>
         ));
       },
     },
