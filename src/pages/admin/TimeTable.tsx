@@ -234,7 +234,7 @@ const TimeTable: React.FC = () => {
                       { required: true, message: "Please select a teacher!" },
                     ]}
                   >
-                    <Select placeholder="Select a teacher">
+                    <Select showSearch={true} placeholder="Select a teacher">
                       {faculties.map((faculty) => (
                         <Option key={faculty.name} value={faculty.id}>
                           {faculty.name}

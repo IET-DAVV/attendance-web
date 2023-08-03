@@ -10,7 +10,7 @@ import { IFaculty } from "@/utils/interfaces";
 import { BRANCH_TABLE_FILTER } from "@/utils/constants";
 import { getTableSorter } from "@/utils/functions";
 import CustomTable from "@/components/CustomTable";
-
+import { FACULTY_TYPE_TABLE_FILTER,DESIGNATION_TABLE_FILTER } from "@/utils/constants";
 interface DataType extends IFaculty {
   key: any;
 }
@@ -32,16 +32,20 @@ const columns: ColumnType<DataType>[] = [
   {
     title: "Designation",
     dataIndex: "designation",
+    ...DESIGNATION_TABLE_FILTER,
     width: 150,
+
   },
   {
     title: "Email",
     dataIndex: "email",
     width: 200,
+    searchable: true,
   },
   {
     title: "Faculty Type",
     dataIndex: "facultyType",
+    ...FACULTY_TYPE_TABLE_FILTER,
     width: 150,
   },
 ];

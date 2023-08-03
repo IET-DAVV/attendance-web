@@ -16,7 +16,7 @@ import TimeTable from "./TimeTable";
 
 const { Header, Content, Footer, Sider } = Layout;
 
-const menuLabels = ["Faculties", "Students", "Subjects", "Time Table"];
+const menuLabels = ["Faculties", "Students", "Subjects", "Time Table","Academic Sessions"];
 
 const App: React.FC = () => {
   const {
@@ -86,7 +86,7 @@ const App: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={["4"]}
+          defaultSelectedKeys={["1"]}
           items={items}
         />
       </Sider>

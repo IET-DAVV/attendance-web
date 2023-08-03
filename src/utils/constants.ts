@@ -26,6 +26,20 @@ export const EXAM_TABLE_FILTER: any = getTableFilters(
   })),
   "detainedIn"
 );
+export const DESIGNATION_TABLE_FILTER: any = getTableFilters(
+  ["Lecturer", "Professor"].map((des) => ({
+    text: des,
+    value: des,
+  })),
+  "designation"
+);
+export const FACULTY_TYPE_TABLE_FILTER: any = getTableFilters(
+  ["Regular", "Guest"].map((des) => ({
+    text: des,
+    value: des,
+  })),
+  "facultyType"
+);
 
 export const SECTION_TABLE_FILTER: any = getTableFilters(
   ["A", "B"].map((section) => ({
