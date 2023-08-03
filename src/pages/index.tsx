@@ -69,42 +69,9 @@ const actionMenuItems = [
   },
 ];
 
-const prevColumns = [
-  {
-    title: "Roll No.",
-    dataIndex: "rollID",
-    key: "rollID",
-    width: 100,
-    fixed: "left",
-    ...getTableSorter("rollID"),
-  },
-  {
-    title: "Enroll No.",
-    dataIndex: "enrollmentID",
-    key: "enrollmentID",
-    width: 100,
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-    width: 200,
-    ...getTableSorter("name"),
-    render: (text: string) => (
-      <span
-        style={{
-          textTransform: "capitalize",
-        }}
-      >
-        {text.toLowerCase()}
-      </span>
-    ),
-  },
-];
-
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
-  const [detainedStudents, setDetainedStudents] = useState([]);
+  const [detainedStudents, setDetainedStudents] = useState<any>({});
   const [editAttendanceDate, setEditAttendanceDate] = useState<
     Date | undefined
   >(undefined);
@@ -130,15 +97,117 @@ export default function Home() {
     academicYear,
     subjects,
   } = useGlobalContext();
-
+  console.log({ studentsAttendance });
   const csvBtnRef = useRef<
     CSVLink & HTMLAnchorElement & { link: HTMLAnchorElement }
   >(null);
 
+  let prevColumns = [
+    {
+      title: "Roll No.",
+      dataIndex: "rollID",
+      key: "rollID",
+      width: 100,
+      fixed: "left",
+      ...getTableSorter("rollID"),
+    },
+    {
+      title: "Enroll No.",
+      dataIndex: "enrollmentID",
+      key: "enrollmentID",
+      width: 100,
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      width: 200,
+      ...getTableSorter("name"),
+      render: (text: string, record: any) => {
+        console.log(
+          detainedStudents,
+          record,
+          detainedStudents[record.enrollmentID]
+        );
+        return (
+          <span
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              textTransform: "capitalize",
+              gap: "1rem",
+            }}
+          >
+            {text.toLowerCase()}
+            {detainedStudents[record.enrollmentID]?.length > 0 && (
+              <Tooltip
+                title={detainedStudents[record.enrollmentID].join(" , ")}
+              >
+                <Tag
+                  style={{
+                    cursor: "pointer",
+                  }}
+                  color="red"
+                >
+                  D
+                </Tag>
+              </Tooltip>
+            )}
+          </span>
+        );
+      },
+    },
+  ];
   async function handleClickEditiAttendance(date: Date) {
     setNewAttendanceDrawer(true);
     setEditAttendanceDate(date);
   }
+  const convertDetainedStudentsToMap = (data: any) => {
+    console.log(data);
+    let list: any = {};
+    data["mst1"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "MST1"];
+      else {
+        list[student] = ["MST1"];
+      }
+    });
+
+    data["mst2"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "MST2"];
+      else {
+        list[student] = ["MST2"];
+      }
+    });
+    data["mst3"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "MST3"];
+      else {
+        list[student] = ["MST3"];
+      }
+    });
+    data["endSem"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "ENDSEM"];
+      else {
+        list[student] = ["ENDSEM"];
+      }
+    });
+    return list;
+  };
+  useEffect(() => {
+    const fetchDetainedStudents = async () => {
+      const res = await attendanceServices.getDetainedStudents(
+        academicYear,
+        currentClassInfo?.subjectCode,
+        currentClassInfo?.id
+      );
+      let modifiedDetainedList: any = {};
+      modifiedDetainedList = convertDetainedStudentsToMap(res.data.data);
+      console.log(modifiedDetainedList);
+      setDetainedStudents(modifiedDetainedList);
+      console.log("detained students", res.data);
+    };
+    fetchDetainedStudents();
+  }, []);
 
   const getCurrentDateRangeAttendance = useCallback(async () => {
     setLoading(true);
@@ -161,7 +230,7 @@ export default function Home() {
 
     setColumns([...prevColumns, ...newDateCols, getAttendancePercentageCol()]);
     setLoading(false);
-  }, [currentDateRange, currentClassInfo, academicYear]);
+  }, [currentDateRange, currentClassInfo, academicYear, detainedStudents]);
 
   useEffect(() => {
     if (currentDateRange.length && currentClassInfo.subjectCode) {
@@ -416,7 +485,10 @@ export default function Home() {
             <Button
               icon={<PlusOutlined />}
               type="primary"
-              onClick={() => setNewAttendanceDrawer(true)}
+              onClick={() => {
+                setNewAttendanceDrawer(true);
+                setEditAttendanceDate(new Date());
+              }}
             >
               New Attendance
             </Button>

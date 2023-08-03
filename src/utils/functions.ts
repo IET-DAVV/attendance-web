@@ -104,6 +104,7 @@ export function separateAttendance(
 }
 
 export function mapAttendanceValues(students: IStudentAttendance[]): any[] {
+  // console.log(students);
   const attendanceMap: any[] = [];
 
   if (!students.length) return attendanceMap;
