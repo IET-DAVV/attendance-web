@@ -243,7 +243,7 @@ export default function Home() {
   }, [currentDateRange, currentClassInfo, academicYear, detainedStudents]);
 
   useEffect(() => {
-    if (currentDateRange.length && currentClassInfo.subjectCode) {
+    if (currentDateRange?.length && currentClassInfo?.subjectCode) {
       getCurrentDateRangeAttendance();
     }
   }, [
