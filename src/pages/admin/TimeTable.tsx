@@ -14,31 +14,41 @@ import {
 } from "antd";
 import { ColumnType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
-import { DownOutlined, PlusOutlined } from "@ant-design/icons";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
 import { IFaculty, ISubject } from "@/utils/interfaces";
 import { facultiesServices } from "@/utils/api/services";
+import { getSessionFormatted } from "./AcademicSession";
+import { getInitials } from "@/utils/functions";
 
 const { Option } = Select;
+
+type TimeSlot = {
+  type: "lecture" | "break" | "lab";
+} & (
+  | {
+      type: "lecture" | "lab";
+      subjectCode: string;
+      roomNumber: string;
+      faculty: {
+        id: string;
+        name: string;
+      };
+    }
+  | { type: "break"; subjectCode?: never; roomNumber?: never; faculty?: never }
+);
 
 interface WeekdayRow {
   key: string;
   weekday: string;
-  [timeSlot: string]: string;
+  timeSlots: {
+    [timeSlot: string]: TimeSlot;
+  };
 }
 
 const TimeTable: React.FC = () => {
   const [timeSlots, setTimeSlots] = useState(
     Array.from({ length: 11 }, (_, i) => i + 7)
   );
-
-  const teachers = [
-    "John Doe",
-    "Jane Smith",
-    "Mike Johnson",
-    "Emma Wilson",
-    "Tom Brown",
-  ];
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCell, setSelectedCell] = useState({ row: -1, column: "" });
@@ -48,14 +58,21 @@ const TimeTable: React.FC = () => {
   const [section, setSection] = useState("A");
   const [faculties, setFaculties] = useState<Array<IFaculty>>([]);
   const [dataSource, setDataSource] = useState<WeekdayRow[]>([
-    { key: "Monday", weekday: "Monday" },
-    { key: "Tuesday", weekday: "Tuesday" },
-    { key: "Wednesday", weekday: "Wednesday" },
-    { key: "Thursday", weekday: "Thursday" },
-    { key: "Friday", weekday: "Friday" },
+    { key: "Monday", weekday: "Monday", timeSlots: {} },
+    { key: "Tuesday", weekday: "Tuesday", timeSlots: {} },
+    { key: "Wednesday", weekday: "Wednesday", timeSlots: {} },
+    { key: "Thursday", weekday: "Thursday", timeSlots: {} },
+    { key: "Friday", weekday: "Friday", timeSlots: {} },
+    { key: "Saturday", weekday: "Saturday", timeSlots: {} },
   ]);
 
-  const { branches, subjects, currentClassInfo } = useGlobalContext();
+  const {
+    branches,
+    subjects,
+    currentClassInfo,
+    fetchAcademicSessions,
+    allAcademicSessions,
+  } = useGlobalContext();
 
   useEffect(() => {
     if (branch?.length) {
@@ -76,12 +93,32 @@ const TimeTable: React.FC = () => {
     fetchFaculties();
   }, []);
 
+  useEffect(() => {
+    if (!allAcademicSessions?.length) {
+      fetchAcademicSessions();
+    }
+  }, [allAcademicSessions]);
+
   const showModal = (row: number, column: string) => {
     setSelectedCell({ row, column });
-    const cellData = dataSource[row][column];
-    const [subjectCode, faculty, roomNumber] = cellData
-      ? cellData.split("\n")
-      : [null, null];
+    const cellData = dataSource?.[row]?.timeSlots?.[column];
+    if (!cellData) {
+      const newDataSource = [...dataSource];
+      if (!newDataSource?.[row].timeSlots?.[column]) {
+        newDataSource[row].timeSlots[column] = {} as TimeSlot;
+      }
+      newDataSource[row].timeSlots[column] = {
+        type: "lecture",
+        subjectCode: "",
+        faculty: { id: "", name: "" },
+        roomNumber: "",
+      };
+      setDataSource(newDataSource);
+      form.resetFields();
+      setIsModalVisible(true);
+      return;
+    }
+    const { subjectCode, faculty, roomNumber } = cellData;
     form.setFieldsValue({ subjectCode, faculty, roomNumber });
     setIsModalVisible(true);
   };
@@ -90,8 +127,16 @@ const TimeTable: React.FC = () => {
     form.validateFields().then((values) => {
       const { subjectCode, faculty, roomNumber } = values;
       const newRow = { ...dataSource[selectedCell.row] };
-      newRow[selectedCell.column] =
-        subjectCode + "\n" + faculty + "\n" + roomNumber;
+      const facultyName = faculties.find((fac) => fac.id === faculty)?.name;
+      if (!newRow.timeSlots) {
+        newRow.timeSlots = {};
+      }
+      newRow.timeSlots[selectedCell.column] = {
+        subjectCode,
+        faculty: { name: facultyName as string, id: faculty },
+        roomNumber,
+        type: "lecture",
+      };
       const updatedDataSource = [...dataSource];
       updatedDataSource[selectedCell.row] = newRow;
       setDataSource(updatedDataSource);
@@ -119,16 +164,34 @@ const TimeTable: React.FC = () => {
     const hour12 = time % 12 || 12;
     columns.push({
       title: `${hour12} - ${hour12 + 1} ${amPm}`,
-      dataIndex: `${time}to${time + 1}`,
+      dataIndex: "timeSlots",
       key: `${time}to${time + 1}`,
-      render: (text: string, record: WeekdayRow, rowIndex: number) => (
-        <div
-          onClick={() => showModal(rowIndex, `${time}to${time + 1}` as string)}
-          className={styles.cellItem}
-        >
-          {text || "NA"}
-        </div>
-      ),
+      render: (
+        timeSlot: {
+          [timeSlot: string]: TimeSlot;
+        },
+        record: WeekdayRow,
+        rowIndex: number
+      ) => {
+        const column = `${time}to${time + 1}`;
+        return (
+          <div
+            onClick={() =>
+              showModal(rowIndex, `${time}to${time + 1}` as string)
+            }
+            className={styles.cellItem}
+          >
+            {!timeSlot?.[column]
+              ? "NA"
+              : timeSlot?.[column]?.type === "break"
+              ? `BREAK`
+              : `${timeSlot?.[column]?.subjectCode || "NA"} ${
+                  getInitials(timeSlot?.[column]?.faculty?.name as string) ||
+                  "NA"
+                } ${timeSlot?.[column]?.roomNumber || ""}`}
+          </div>
+        );
+      },
     });
   });
 
@@ -140,10 +203,15 @@ const TimeTable: React.FC = () => {
     setTimeSlots(timeSlots.slice(0, -1));
   };
 
-  // Add this function to handle the recess
+  // Add this function to handle the break
   const handleRecess = (row: number, column: string) => {
     const newRow = { ...dataSource[row] };
-    newRow[column] = "Recess";
+    if (!newRow.timeSlots) {
+      newRow.timeSlots = {};
+    }
+    newRow.timeSlots[column] = {
+      type: "break",
+    };
     const updatedDataSource = [...dataSource];
     updatedDataSource[row] = newRow;
     setDataSource(updatedDataSource);
@@ -176,6 +244,13 @@ const TimeTable: React.FC = () => {
             {["A", "B", "NA"].map((section) => (
               <Option key={section} value={section}>
                 {section}
+              </Option>
+            ))}
+          </Select>
+          <Select placeholder="Select Academic Session">
+            {allAcademicSessions?.map((session) => (
+              <Option key={session} value={session}>
+                {getSessionFormatted(session)}
               </Option>
             ))}
           </Select>

@@ -23,6 +23,9 @@ interface IGlobalContext {
   currentClassInfo: ICurrentClassInfo;
   branches: Array<IBranch>;
   academicYear: string;
+  fetchAcademicSessions: () => void;
+  allAcademicSessions: string[];
+  setAllAcademicSessions: React.Dispatch<SetStateAction<string[]>>;
 }
 
 const GlobalContext = createContext<IGlobalContext>({} as IGlobalContext);
@@ -49,6 +52,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     id: "2021_CS_A",
   });
   const [branches, setBranches] = useState<Array<IBranch>>([]);
+  const [allAcademicSessions, setAllAcademicSessions] = useState<string[]>([]);
   const [academicYear, setAcademicYear] = useState<string>("2022_2023");
 
   useEffect(() => {
@@ -102,6 +106,16 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     }
   }, [branches]);
 
+  const fetchAcademicSessions = async () => {
+    try {
+      const { data } = await constantsServices.getAllAcademicSession();
+      console.log(data);
+      setAllAcademicSessions(data?.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <GlobalContext.Provider
       value={{
@@ -113,6 +127,9 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         currentClassInfo,
         branches,
         academicYear,
+        fetchAcademicSessions,
+        allAcademicSessions,
+        setAllAcademicSessions,
       }}
     >
       {children}

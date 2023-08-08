@@ -3,10 +3,11 @@ import { Button, Layout, Popconfirm, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
 import MainLayout from "@/layouts/MainLayout/MainLayout";
-import { PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import AddAcademicSession from "./addAcademicSession";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
 import { constantsServices } from "@/utils/api/services";
+import CustomTable from "@/components/CustomTable";
 
 interface DataType {
   key: React.Key;
@@ -15,26 +16,30 @@ interface DataType {
 
 const data: DataType[] = [];
 
+export function getSessionFormatted(session: string) {
+  const split = session.split("_");
+  return `${split[0]} - ${split[1]} (Session ${split[2]})`;
+}
+
 const AcademicSession: React.FC = () => {
   const [addAcademicSessionModel, setAddAcademicSessionModel] = useState(false);
   const [academicSession, setAcademicSession] = useState("");
   const [oldAcademicSession, setOldAcademicSession] = useState("");
   const [editMode, setEditMode] = useState(false);
-  const [allAcademicSessions, setAllAcademicSessions] = useState<DataType[]>(
-    []
-  );
+
   const [loading, setLoading] = useState(false);
-  const deleteAcademicSessionHandler = async (data: {
-    key: React.Key;
-    session: string;
-  }) => {
+
+  const { fetchAcademicSessions, setAllAcademicSessions, allAcademicSessions } =
+    useGlobalContext();
+
+  const deleteAcademicSessionHandler = async (session: string) => {
     console.log(data);
     setLoading(true);
     try {
-      await constantsServices.deleteAcademicSession(data.session);
+      await constantsServices.deleteAcademicSession(session);
       setAllAcademicSessions(
         allAcademicSessions.filter(
-          (academicSession) => academicSession.session !== data.session
+          (academicSession) => academicSession !== session
         )
       );
     } catch (err) {
@@ -46,15 +51,18 @@ const AcademicSession: React.FC = () => {
     {
       title: "Academic Session",
       dataIndex: "session",
+      width: "90%",
+      render: (session) => <span>{getSessionFormatted(session)}</span>,
     },
     {
-      title: "Action",
+      title: "Actions",
       dataIndex: "action",
-      width: 200,
+      width: "10%",
       render: (_, record) => (
         <div className={styles.actionBtns}>
           <Button
-            type="primary"
+            type="text"
+            shape="circle"
             onClick={() => {
               setAcademicSession(record.session);
               setOldAcademicSession(record.session);
@@ -62,42 +70,30 @@ const AcademicSession: React.FC = () => {
               setAddAcademicSessionModel(true);
             }}
           >
-            Edit
+            <EditOutlined />
           </Button>
           <Popconfirm
-            title="Delete the Academic Session"
+            title={`Delete ${getSessionFormatted(record.session)}`}
             description="Are you sure to delete this Academic Session?"
-            onConfirm={deleteAcademicSessionHandler.bind(null, record)}
+            onConfirm={deleteAcademicSessionHandler.bind(null, record.session)}
             onCancel={() => {}}
             okText="Yes"
             cancelText="No"
           >
-            <Button danger>Delete</Button>
+            <Button danger shape="circle" type="text">
+              <DeleteOutlined />
+            </Button>
           </Popconfirm>
         </div>
       ),
     },
   ];
+
   useEffect(() => {
-    const fetchAcademicSessions = async () => {
-      setLoading(true);
-      try {
-        const { data } = await constantsServices.getAllAcademicSession();
-        console.log(data);
-        setAllAcademicSessions(
-          data?.data?.map((academicSession: any, index: number) => ({
-            session: academicSession,
-            key: index,
-          }))
-        );
-      } catch (err) {
-        console.log(err);
-      }
-      setLoading(false);
-    };
     fetchAcademicSessions();
   }, []);
-  function handleSubmit() {
+
+  async function handleSubmit() {
     console.log(academicSession);
     setLoading(true);
     try {
@@ -108,11 +104,8 @@ const AcademicSession: React.FC = () => {
         });
         setAllAcademicSessions(
           allAcademicSessions.map((as) => {
-            if (as.session === oldAcademicSession) {
-              return {
-                ...as,
-                session: academicSession,
-              };
+            if (as === oldAcademicSession) {
+              return academicSession;
             }
             return as;
           })
@@ -122,14 +115,8 @@ const AcademicSession: React.FC = () => {
         return;
       }
 
-      constantsServices.addNewAcademicSession(academicSession);
-      setAllAcademicSessions([
-        ...allAcademicSessions,
-        {
-          session: academicSession,
-          key: allAcademicSessions.length + 1,
-        },
-      ]);
+      await constantsServices.addNewAcademicSession(academicSession);
+      setAllAcademicSessions([...allAcademicSessions, academicSession]);
       setAcademicSession("");
     } catch (err) {
       console.log(err);
@@ -154,19 +141,14 @@ const AcademicSession: React.FC = () => {
         </div>
       </div>
       <div className={styles.tableContainer}>
-        <Table
+        <CustomTable
           loading={loading}
           bordered
-          // rowSelection={{
-          //   type: "checkbox",
-          //   ...rowSelection,
-          // }}
           columns={columns}
-          dataSource={allAcademicSessions}
-          scroll={{
-            x: 1000,
-            y: 500,
-          }}
+          dataSource={allAcademicSessions?.map((session) => ({
+            session,
+            key: session,
+          }))}
         />
       </div>
       <AddAcademicSession
