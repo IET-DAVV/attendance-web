@@ -104,6 +104,7 @@ export function separateAttendance(
 }
 
 export function mapAttendanceValues(students: IStudentAttendance[]): any[] {
+  // console.log(students);
   const attendanceMap: any[] = [];
 
   if (!students.length) return attendanceMap;
@@ -145,8 +146,10 @@ export function getTableFilters<T extends Record<string, string>>(
 ) {
   return {
     filters: options,
-    onFilter: (value: string, record: T) =>
-      record?.[dataIndex].indexOf(value) === 0,
+    onFilter: (value: string, record: T) => {
+      console.log(record?.[dataIndex]?.indexOf(value));
+      return record?.[dataIndex]?.indexOf(value) !== -1;
+    },
   };
 }
 

@@ -43,6 +43,7 @@ const { RangePicker } = DatePicker;
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import TablePDF from "@/components/TablePDF";
 import DetainStudents from "../components/detainStudents";
+import { EXAM_TABLE_FILTER } from "@/utils/constants";
 
 // items arr for exporting and marking attendance
 const actionMenuItems = [
@@ -69,42 +70,9 @@ const actionMenuItems = [
   },
 ];
 
-const prevColumns = [
-  {
-    title: "Roll No.",
-    dataIndex: "rollID",
-    key: "rollID",
-    width: 100,
-    fixed: "left",
-    ...getTableSorter("rollID"),
-  },
-  {
-    title: "Enroll No.",
-    dataIndex: "enrollmentID",
-    key: "enrollmentID",
-    width: 100,
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-    width: 200,
-    ...getTableSorter("name"),
-    render: (text: string) => (
-      <span
-        style={{
-          textTransform: "capitalize",
-        }}
-      >
-        {text.toLowerCase()}
-      </span>
-    ),
-  },
-];
-
 export default function Home() {
   const [attendance, setAttendance] = useState([]);
-  const [detainedStudents, setDetainedStudents] = useState([]);
+  const [detainedStudents, setDetainedStudents] = useState<any>({});
   const [editAttendanceDate, setEditAttendanceDate] = useState<
     Date | undefined
   >(undefined);
@@ -121,8 +89,6 @@ export default function Home() {
     dayjs(getCurrentWeekDates()[0]),
     dayjs(getCurrentWeekDates()[5]),
   ]);
-
-  const [columns, setColumns] = useState<Array<any>>([]);
   const {
     studentsAttendance,
     setStudentsAttendance,
@@ -131,14 +97,127 @@ export default function Home() {
     subjects,
   } = useGlobalContext();
 
+  const [columns, setColumns] = useState<Array<any>>([]);
+  console.log({ studentsAttendance });
   const csvBtnRef = useRef<
     CSVLink & HTMLAnchorElement & { link: HTMLAnchorElement }
   >(null);
 
+  let prevColumns = [
+    {
+      title: "Roll No.",
+      dataIndex: "rollID",
+      key: "rollID",
+      width: 100,
+      fixed: "left",
+      ...getTableSorter("rollID"),
+    },
+    {
+      title: "Enroll No.",
+      dataIndex: "enrollmentID",
+      key: "enrollmentID",
+      width: 100,
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      width: 200,
+      ...getTableSorter("name"),
+      render: (text: string, record: any) => {
+        return (
+          <span
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              textTransform: "capitalize",
+              gap: "1rem",
+            }}
+          >
+            {text.toLowerCase()}
+            {record?.detainedIn?.length > 0 && (
+              <Tooltip title={record?.detainedIn?.join(" , ")}>
+                <Tag
+                  style={{
+                    cursor: "pointer",
+                  }}
+                  color="red"
+                >
+                  D
+                </Tag>
+              </Tooltip>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Detained in",
+      key: "detainedIn",
+      dataIndex: "detainedIn",
+      width: 250,
+      ...EXAM_TABLE_FILTER,
+      render: (detainedExams: Array<string> | undefined, record: any) => {
+        if (detainedExams?.length == 0) {
+          return <span>NA</span>;
+        }
+        return detainedExams?.map((exam: string, idx: number) => (
+          <Tag key={idx} color="blue">
+            {exam}
+          </Tag>
+        ));
+      },
+    },
+  ];
   async function handleClickEditiAttendance(date: Date) {
     setNewAttendanceDrawer(true);
     setEditAttendanceDate(date);
   }
+  const convertDetainedStudentsToMap = (data: any) => {
+    console.log(data);
+    let list: any = {};
+    data["mst1"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "MST1"];
+      else {
+        list[student] = ["MST1"];
+      }
+    });
+
+    data["mst2"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "MST2"];
+      else {
+        list[student] = ["MST2"];
+      }
+    });
+    data["mst3"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "MST3"];
+      else {
+        list[student] = ["MST3"];
+      }
+    });
+    data["endSem"]?.forEach((student: any) => {
+      if (list[student]) list[student] = [...list[student], "ENDSEM"];
+      else {
+        list[student] = ["ENDSEM"];
+      }
+    });
+    return list;
+  };
+  useEffect(() => {
+    const fetchDetainedStudents = async () => {
+      const res = await attendanceServices.getDetainedStudents(
+        academicYear,
+        currentClassInfo?.subjectCode,
+        currentClassInfo?.id
+      );
+      let modifiedDetainedList: any = {};
+      modifiedDetainedList = convertDetainedStudentsToMap(res.data.data);
+      console.log(modifiedDetainedList);
+      setDetainedStudents(modifiedDetainedList);
+    };
+    fetchDetainedStudents();
+  }, []);
 
   const getCurrentDateRangeAttendance = useCallback(async () => {
     setLoading(true);
@@ -161,10 +240,10 @@ export default function Home() {
 
     setColumns([...prevColumns, ...newDateCols, getAttendancePercentageCol()]);
     setLoading(false);
-  }, [currentDateRange, currentClassInfo, academicYear]);
+  }, [currentDateRange, currentClassInfo, academicYear, detainedStudents]);
 
   useEffect(() => {
-    if (currentDateRange.length && currentClassInfo.subjectCode) {
+    if (currentDateRange?.length && currentClassInfo?.subjectCode) {
       getCurrentDateRangeAttendance();
     }
   }, [
@@ -324,6 +403,18 @@ export default function Home() {
       }, 1000);
     }
   });
+  console.log(studentsAttendance);
+  let studentsAttendanceWithDetention = studentsAttendance.map(
+    (student: any) => {
+      if (detainedStudents[student.enrollmentID]) {
+        return {
+          ...student,
+          detainedIn: detainedStudents[student.enrollmentID],
+        };
+      }
+      return { ...student, detainedIn: [] };
+    }
+  );
 
   return (
     <>
@@ -416,7 +507,10 @@ export default function Home() {
             <Button
               icon={<PlusOutlined />}
               type="primary"
-              onClick={() => setNewAttendanceDrawer(true)}
+              onClick={() => {
+                setNewAttendanceDrawer(true);
+                setEditAttendanceDate(new Date());
+              }}
             >
               New Attendance
             </Button>
@@ -432,7 +526,7 @@ export default function Home() {
               ...rowSelection,
             }}
             columns={columns}
-            dataSource={studentsAttendance}
+            dataSource={studentsAttendanceWithDetention}
             scroll={{
               x: 1000,
               y: 500,
