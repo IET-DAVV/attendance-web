@@ -6,6 +6,8 @@ import { InboxOutlined } from "@ant-design/icons";
 const { Dragger } = Upload;
 
 const AddFaculty: React.FC<{
+  editMode?: boolean;
+  selectedFaculty?: any;
   isModalOpen: boolean;
   handleOk: () => void;
   handleCancel: () => void;
@@ -14,7 +16,13 @@ const AddFaculty: React.FC<{
   setEmail: Function;
   setFacultyType: Function;
   setName: Function;
+  branchID?: string;
+  designation?: string;
+  email?: string;
+  facultyType?: string;
+  name?: string;
 }> = ({
+  editMode,
   isModalOpen,
   handleOk,
   handleCancel,
@@ -23,6 +31,11 @@ const AddFaculty: React.FC<{
   setEmail,
   setFacultyType,
   setName,
+  branchID,
+  designation,
+  email,
+  facultyType,
+  name,
 }) => {
   const [tab, setTab] = React.useState("1");
 
@@ -30,7 +43,7 @@ const AddFaculty: React.FC<{
     setTab(key);
   }
 
-  const items: TabsProps["items"] = [
+  let items: TabsProps["items"] = [
     {
       key: "1",
       label: `Single`,
@@ -41,6 +54,11 @@ const AddFaculty: React.FC<{
           setEmail={setEmail}
           setFacultyType={setFacultyType}
           setName={setName}
+          branchID={branchID}
+          designation={designation}
+          email={email}
+          facultyType={facultyType}
+          name={name}
         />
       ),
     },
@@ -50,10 +68,12 @@ const AddFaculty: React.FC<{
       children: <AddFacultyMultiple />,
     },
   ];
-
+  if (editMode) {
+    items.pop();
+  }
   return (
     <Modal
-      title="Add Faculty"
+      title={editMode ? "Edit Faculty" : "Add Faculty"}
       open={isModalOpen}
       onOk={handleOk}
       onCancel={handleCancel}
@@ -71,7 +91,23 @@ const AddFacultySingle: React.FC<{
   setEmail: Function;
   setFacultyType: Function;
   setName: Function;
-}> = ({ setBranchID, setDesignation, setEmail, setFacultyType, setName }) => {
+  branchID?: string;
+  designation?: string;
+  email?: string;
+  facultyType?: string;
+  name?: string;
+}> = ({
+  setBranchID,
+  setDesignation,
+  setEmail,
+  setFacultyType,
+  setName,
+  branchID,
+  designation,
+  email,
+  facultyType,
+  name,
+}) => {
   return (
     <Space
       direction="vertical"
@@ -85,6 +121,7 @@ const AddFacultySingle: React.FC<{
         onChange={(data) => {
           setBranchID(data.target.value);
         }}
+        value={branchID}
       />
       <Input
         addonBefore="Designation"
@@ -92,6 +129,7 @@ const AddFacultySingle: React.FC<{
         onChange={(data) => {
           setDesignation(data.target.value);
         }}
+        value={designation}
       />
       <Input
         addonBefore="Email"
@@ -99,6 +137,7 @@ const AddFacultySingle: React.FC<{
         onChange={(data) => {
           setEmail(data.target.value);
         }}
+        value={email}
       />
       <Input
         addonBefore="Faculty Type"
@@ -106,6 +145,7 @@ const AddFacultySingle: React.FC<{
         onChange={(data) => {
           setFacultyType(data.target.value);
         }}
+        value={facultyType}
       />
       <Input
         addonBefore="Name"
@@ -113,6 +153,7 @@ const AddFacultySingle: React.FC<{
         onChange={(data) => {
           setName(data.target.value);
         }}
+        value={name}
       />
     </Space>
   );

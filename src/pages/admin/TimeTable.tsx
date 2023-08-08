@@ -5,6 +5,7 @@ import {
   Col,
   Dropdown,
   Form,
+  Input,
   Menu,
   Modal,
   Row,
@@ -78,21 +79,23 @@ const TimeTable: React.FC = () => {
   const showModal = (row: number, column: string) => {
     setSelectedCell({ row, column });
     const cellData = dataSource[row][column];
-    const [subjectCode, faculty] = cellData
+    const [subjectCode, faculty, roomNumber] = cellData
       ? cellData.split("\n")
       : [null, null];
-    form.setFieldsValue({ subjectCode, faculty });
+    form.setFieldsValue({ subjectCode, faculty, roomNumber });
     setIsModalVisible(true);
   };
 
   const handleOk = () => {
     form.validateFields().then((values) => {
-      const { subjectCode, faculty } = values;
+      const { subjectCode, faculty, roomNumber } = values;
       const newRow = { ...dataSource[selectedCell.row] };
-      newRow[selectedCell.column] = subjectCode + "\n" + faculty;
+      newRow[selectedCell.column] =
+        subjectCode + "\n" + faculty + "\n" + roomNumber;
       const updatedDataSource = [...dataSource];
       updatedDataSource[selectedCell.row] = newRow;
       setDataSource(updatedDataSource);
+      //send to backend
       setIsModalVisible(false);
       form.resetFields(); // Reset the form after pressing OK
     });
@@ -234,13 +237,25 @@ const TimeTable: React.FC = () => {
                       { required: true, message: "Please select a teacher!" },
                     ]}
                   >
-                    <Select placeholder="Select a teacher">
+                    <Select showSearch={true} placeholder="Select a teacher">
                       {faculties.map((faculty) => (
                         <Option key={faculty.name} value={faculty.id}>
                           {faculty.name}
                         </Option>
                       ))}
                     </Select>
+                  </Form.Item>
+                  <Form.Item
+                    label="Room Number"
+                    name="roomNumber"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter a room number!",
+                      },
+                    ]}
+                  >
+                    <Input placeholder="Enter room number" />
                   </Form.Item>
                 </Form>
               </Card>

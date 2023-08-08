@@ -13,10 +13,18 @@ import Subjects from "./Subjects";
 import Students from "./Students";
 import Faculties from "./Faculties";
 import TimeTable from "./TimeTable";
+import { set } from "date-fns";
+import AcademicSession from "./AcademicSession";
 
 const { Header, Content, Footer, Sider } = Layout;
 
-const menuLabels = ["Faculties", "Students", "Subjects", "Time Table"];
+const menuLabels = [
+  "Faculties",
+  "Students",
+  "Subjects",
+  "Time Table",
+  "Academic Sessions",
+];
 
 const App: React.FC = () => {
   const {
@@ -26,11 +34,13 @@ const App: React.FC = () => {
   const [students, setStudents] = useState(false);
   const [subjects, setSubjects] = useState(false);
   const [timeTable, setTimeTable] = useState(false);
+  const [academicSession, setAcademicSession] = useState(false);
 
   const items: MenuProps["items"] = [
     UserOutlined,
     UsergroupAddOutlined,
     BookFilled,
+    CalendarFilled,
     CalendarFilled,
   ].map((icon, index) => ({
     key: String(index + 1),
@@ -41,19 +51,28 @@ const App: React.FC = () => {
         case 0:
           setFaculty(true), setStudents(false), setSubjects(false);
           setTimeTable(false);
+          setAcademicSession(false);
           break;
         case 1:
           setFaculty(false), setStudents(true), setSubjects(false);
           setTimeTable(false);
+          setAcademicSession(false);
           break;
 
         case 2:
           setFaculty(false), setStudents(false), setSubjects(true);
           setTimeTable(false);
+          setAcademicSession(false);
           break;
         case 3:
           setFaculty(false), setStudents(false), setSubjects(false);
           setTimeTable(true);
+          setAcademicSession(false);
+          break;
+        case 4:
+          setFaculty(false), setStudents(false), setSubjects(false);
+          setTimeTable(false);
+          setAcademicSession(true);
           break;
       }
     },
@@ -86,7 +105,7 @@ const App: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={["4"]}
+          defaultSelectedKeys={["1"]}
           items={items}
         />
       </Sider>
@@ -104,6 +123,7 @@ const App: React.FC = () => {
             {students && <Students />}
             {subjects && <Subjects />}
             {timeTable && <TimeTable />}
+            {academicSession && <AcademicSession />}
           </div>
         </Content>
       </Layout>

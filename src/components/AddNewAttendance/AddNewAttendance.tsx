@@ -249,11 +249,11 @@ const AddNewAttendance: React.FC<{
   function handleClickSelectAll(e: CheckboxChangeEvent) {
     markAllAttendance(e.target.checked ? "Present" : "Absent");
   }
-
+  const isToday = new Date().getDate() === today.date;
   return (
     <Drawer
       title={
-        "New Attendance for " +
+        (isToday ? "New Attendance for " : "Edit Attendance for ") +
         `${currentClassInfo.branch}${currentClassInfo.section}, ${currentClassInfo.subjectCode} [${today.day}, ${today.date} ${today.month}]`
       }
       placement="bottom"
