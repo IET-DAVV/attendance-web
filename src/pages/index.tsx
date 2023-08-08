@@ -44,6 +44,8 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import TablePDF from "@/components/TablePDF";
 import DetainStudents from "../components/detainStudents";
 
+const { Option } = Select;
+
 // items arr for exporting and marking attendance
 const actionMenuItems = [
   {
@@ -335,10 +337,23 @@ export default function Home() {
       </Head>
       <MainLayout className={styles.main}>
         <div className={styles.flexRow}>
-          <h3>
+          <div className={styles.selectClass}>
+            <Select
+              placeholder="Subject Code"
+              value={currentClassInfo?.subjectCode}
+            >
+              <Option value="CER4C1">CER4C1</Option>
+              <Option value="CER4C3">CER4C3</Option>
+            </Select>
+            <Select placeholder="Academic Year (Session)">
+              <Option value="2022_2023_1">2022-2023 (Session 1)</Option>
+              <Option value="2022_2023_2">2022-2023 (Session 2)</Option>
+            </Select>
+          </div>
+          {/* <h3>
             {currentClassInfo?.subjectCode} |{" "}
             {currentClassInfo?.id?.replace("_", " ")}
-          </h3>
+          </h3> */}
           <div style={{ visibility: "hidden" }} id="pdfBtnContainer">
             {isClientSide && isClickedOnExportPDF && columns.length && (
               <PDFDownloadLink

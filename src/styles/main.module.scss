@@ -12,6 +12,12 @@
     }
   }
 
+  .selectClass {
+    @extend .flexRow;
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+
   .tableContainer {
     margin-top: 2rem;
     width: 100%;
