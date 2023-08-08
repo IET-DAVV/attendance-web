@@ -7,7 +7,11 @@ const AddAcademicSession: React.FC<{
   handleCancel: () => void;
   setAcademicSession: Function;
   editMode?: boolean;
-  selectedAcademicSession?: string;
+  selectedAcademicSession?: {
+    academicSession: string;
+    createdAt: number;
+    modifiedAt: number;
+  };
 }> = ({
   isModalOpen,
   handleOk,
@@ -27,9 +31,13 @@ const AddAcademicSession: React.FC<{
         <Input
           addonBefore="Academic Session"
           placeholder="Ex. 2022_2023_1"
-          value={selectedAcademicSession}
-          onChange={(data) => {
-            setAcademicSession(data.target.value);
+          value={selectedAcademicSession?.academicSession}
+          onChange={(event) => {
+            setAcademicSession({
+              academicSession: event.target.value,
+              createdAt: Date.now(),
+              modifiedAt: Date.now(),
+            });
           }}
         />
       </Space>

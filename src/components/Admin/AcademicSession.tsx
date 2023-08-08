@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Layout, Popconfirm, Table } from "antd";
+import { Button, Layout, Popconfirm, Table, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
 import MainLayout from "@/layouts/MainLayout/MainLayout";
@@ -11,20 +11,31 @@ import CustomTable from "@/components/CustomTable";
 
 interface DataType {
   key: React.Key;
-  session: string;
+  academicSession: string;
+  createdAt: number;
+  modifiedAt: number;
 }
 
 const data: DataType[] = [];
 
 export function getSessionFormatted(session: string) {
-  const split = session.split("_");
+  const split = session?.split("_") || [];
+  if (split.length !== 3) return session;
   return `${split[0]} - ${split[1]} (Session ${split[2]})`;
 }
 
 const AcademicSession: React.FC = () => {
   const [addAcademicSessionModel, setAddAcademicSessionModel] = useState(false);
-  const [academicSession, setAcademicSession] = useState("");
-  const [oldAcademicSession, setOldAcademicSession] = useState("");
+  const [academicSession, setAcademicSession] = useState({
+    academicSession: "",
+    createdAt: 0,
+    modifiedAt: 0,
+  });
+  const [oldAcademicSession, setOldAcademicSession] = useState({
+    academicSession: "",
+    createdAt: 0,
+    modifiedAt: 0,
+  });
   const [editMode, setEditMode] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -32,14 +43,14 @@ const AcademicSession: React.FC = () => {
   const { fetchAcademicSessions, setAllAcademicSessions, allAcademicSessions } =
     useGlobalContext();
 
-  const deleteAcademicSessionHandler = async (session: string) => {
+  const deleteAcademicSessionHandler = async (sessionId: string) => {
     console.log(data);
     setLoading(true);
     try {
-      await constantsServices.deleteAcademicSession(session);
+      await constantsServices.deleteAcademicSession(sessionId);
       setAllAcademicSessions(
         allAcademicSessions.filter(
-          (academicSession) => academicSession !== session
+          (academicSession) => academicSession.academicSession !== sessionId
         )
       );
     } catch (err) {
@@ -50,9 +61,25 @@ const AcademicSession: React.FC = () => {
   const columns: ColumnsType<DataType> = [
     {
       title: "Academic Session",
-      dataIndex: "session",
-      width: "90%",
+      dataIndex: "academicSession",
+      width: "60%",
       render: (session) => <span>{getSessionFormatted(session)}</span>,
+    },
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      width: "15%",
+      render: (createdAt: number) => (
+        <span>{new Date(createdAt).toLocaleDateString()}</span>
+      ),
+    },
+    {
+      title: "Modified At",
+      dataIndex: "modifiedAt",
+      width: "15%",
+      render: (modifiedAt) => (
+        <span>{new Date(modifiedAt).toLocaleDateString()}</span>
+      ),
     },
     {
       title: "Actions",
@@ -64,8 +91,8 @@ const AcademicSession: React.FC = () => {
             type="text"
             shape="circle"
             onClick={() => {
-              setAcademicSession(record.session);
-              setOldAcademicSession(record.session);
+              setAcademicSession(record);
+              setOldAcademicSession(record);
               setEditMode(true);
               setAddAcademicSessionModel(true);
             }}
@@ -73,9 +100,12 @@ const AcademicSession: React.FC = () => {
             <EditOutlined />
           </Button>
           <Popconfirm
-            title={`Delete ${getSessionFormatted(record.session)}`}
+            title={`Delete ${getSessionFormatted(record.academicSession)}`}
             description="Are you sure to delete this Academic Session?"
-            onConfirm={deleteAcademicSessionHandler.bind(null, record.session)}
+            onConfirm={deleteAcademicSessionHandler.bind(
+              null,
+              record.academicSession
+            )}
             onCancel={() => {}}
             okText="Yes"
             cancelText="No"
@@ -98,28 +128,40 @@ const AcademicSession: React.FC = () => {
     setLoading(true);
     try {
       if (editMode) {
-        constantsServices.updateAcademicSession({
-          oldData: oldAcademicSession,
+        await constantsServices.updateAcademicSession({
+          id: academicSession.academicSession,
           newData: academicSession,
         });
         setAllAcademicSessions(
           allAcademicSessions.map((as) => {
-            if (as === oldAcademicSession) {
-              return academicSession;
+            if (as.academicSession === oldAcademicSession.academicSession) {
+              return {
+                ...as,
+                academicSession: academicSession.academicSession,
+              };
             }
             return as;
           })
         );
         setEditMode(false);
         setAddAcademicSessionModel(false);
+        message.success("Academic Session Updated Successfully");
         return;
       }
 
-      await constantsServices.addNewAcademicSession(academicSession);
+      await constantsServices.addNewAcademicSession(
+        academicSession.academicSession
+      );
       setAllAcademicSessions([...allAcademicSessions, academicSession]);
-      setAcademicSession("");
+      setAcademicSession({
+        academicSession: "",
+        createdAt: 0,
+        modifiedAt: 0,
+      });
+      message.success("Academic Session Added Successfully");
     } catch (err) {
       console.log(err);
+      message.error("Something went wrong");
     }
     setLoading(false);
   }
@@ -146,8 +188,8 @@ const AcademicSession: React.FC = () => {
           bordered
           columns={columns}
           dataSource={allAcademicSessions?.map((session) => ({
-            session,
-            key: session,
+            ...session,
+            key: session.academicSession,
           }))}
         />
       </div>
@@ -157,12 +199,20 @@ const AcademicSession: React.FC = () => {
         isModalOpen={addAcademicSessionModel}
         handleOk={() => {
           handleSubmit();
-          setAcademicSession("");
+          setAcademicSession({
+            academicSession: "",
+            createdAt: 0,
+            modifiedAt: 0,
+          });
           setEditMode(false);
           setAddAcademicSessionModel(false);
         }}
         handleCancel={() => {
-          setAcademicSession("");
+          setAcademicSession({
+            academicSession: "",
+            createdAt: 0,
+            modifiedAt: 0,
+          });
           setEditMode(false);
           setAddAcademicSessionModel(false);
         }}

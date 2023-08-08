@@ -186,8 +186,7 @@ const TimeTable: React.FC = () => {
               : timeSlot?.[column]?.type === "break"
               ? `BREAK`
               : `${timeSlot?.[column]?.subjectCode || "NA"} ${
-                  getInitials(timeSlot?.[column]?.faculty?.name as string) ||
-                  "NA"
+                  getInitials(timeSlot?.[column]?.faculty?.name as string) || ""
                 } ${timeSlot?.[column]?.roomNumber || ""}`}
           </div>
         );
@@ -273,6 +272,9 @@ const TimeTable: React.FC = () => {
           />
         </div>
       </div>
+      <div>
+        <Button type="primary">Submit</Button>
+      </div>
       <Modal
         title="Edit Subject"
         open={isModalVisible}
@@ -345,7 +347,7 @@ const TimeTable: React.FC = () => {
                       setIsModalVisible(false);
                     }}
                   >
-                    Set Recess
+                    Set Break
                   </Button>
                 </Form.Item>
               </Card>

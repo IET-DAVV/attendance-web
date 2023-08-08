@@ -7,14 +7,13 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Layout, Menu, theme } from "antd";
-import AddStudents from "./addStudents";
-import AddSubjects from "./addSubjects";
-import Subjects from "./Subjects";
-import Students from "./Students";
-import Faculties from "./Faculties";
-import TimeTable from "./TimeTable";
-import { set } from "date-fns";
-import AcademicSession from "./AcademicSession";
+import AddStudents from "../../components/Admin/addStudents";
+import AddSubjects from "../../components/Admin/addSubjects";
+import Subjects from "../../components/Admin/Subjects";
+import Students from "../../components/Admin/Students";
+import Faculties from "../../components/Admin/Faculties";
+import TimeTable from "../../components/Admin/TimeTable";
+import AcademicSession from "../../components/Admin/AcademicSession";
 
 const { Header, Content, Footer, Sider } = Layout;
 

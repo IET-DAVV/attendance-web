@@ -8,7 +8,6 @@ import {
   doc,
   getDoc,
   updateDoc,
-  setDoc,
 } from "firebase/firestore";
 import { FIREBASE_COLLECTIONS } from "@/utils/constants";
 
@@ -29,51 +28,40 @@ type RequestData = {
   branch?: string; // 2023
 };
 
-async function getAllAcademicYears() {
+async function getAllClasses() {
   const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
-  const docRef = doc(collectionRef, "academicYears");
+  const docRef = doc(collectionRef, "classes");
   const docSnap = await getDoc(docRef);
-  const data = docSnap.data();
-  if (!data) {
-    return [];
-  }
-  return Object.values(data);
+  return docSnap.data()?.academicYearsList;
 }
-async function deleteAcademicYear(id: string): Promise<boolean> {
-  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "academicYears");
+async function deleteClass(id: string): Promise<boolean> {
+  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "classes");
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) {
     return false;
   }
-  let academicYears = { ...docSnap.data() };
-  const curraAcademicYear = academicYears[id];
-  if (!curraAcademicYear) {
+  const classesList = docSnap.data()?.classesList || [];
+  const index = classesList.findIndex((year: string) => year === id);
+  if (index === -1) {
     return false;
   }
-  delete academicYears[id];
-  await setDoc(docRef, { ...academicYears });
+  classesList.splice(index, 1);
+  await updateDoc(docRef, { classesList });
   return true;
 }
-async function updateAcademicYear(id: string, data: string): Promise<boolean> {
-  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "academicYears");
+async function updateClass(id: string, data: string): Promise<boolean> {
+  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "classes");
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) {
     return false;
   }
-  const academicYearsList = docSnap.data();
-  const currAcademicYear = academicYearsList[id];
-  // cl
-  console.log("CURR", currAcademicYear);
-  if (!currAcademicYear) {
+  const classesList = docSnap.data()?.classesList || [];
+  const index = classesList.findIndex((year: string) => year === id);
+  if (index === -1) {
     return false;
   }
-  await setDoc(docRef, {
-    [id]: {
-      ...currAcademicYear,
-      academicSession: data,
-      modifiedAt: Date.now(),
-    },
-  });
+  classesList[index] = data;
+  await updateDoc(docRef, { classesList });
   return true;
 }
 export default async function handler(
@@ -83,9 +71,9 @@ export default async function handler(
   try {
     switch (req.method) {
       case "GET": {
-        const academicYears = await getAllAcademicYears();
+        const classes = await getAllClasses();
         return res.status(200).json({
-          data: academicYears as Data[],
+          data: classes as Data[],
           status: "success",
         });
       }
@@ -98,16 +86,16 @@ export default async function handler(
             message: "Missing id parameter",
           });
         }
-        const deleted = await deleteAcademicYear(id as string);
+        const deleted = await deleteClass(id as string);
         if (!deleted) {
           return res.status(404).json({
             status: "error",
-            message: "Academic year not found",
+            message: "Class not found",
           });
         }
         return res.status(200).json({
           status: "success",
-          message: "Academic year deleted successfully",
+          message: "Class deleted successfully",
         });
       }
       case "PUT": {
@@ -118,22 +106,22 @@ export default async function handler(
             message: "Missing id parameter",
           });
         }
-        const updated = await updateAcademicYear(id as string, data);
+        const updated = await updateClass(id as string, data);
         if (!updated) {
           return res.status(404).json({
             status: "error",
-            message: "Academic year not found",
+            message: "Class not found",
           });
         }
         return res.status(200).json({
           status: "success",
-          message: "Academic year updated successfully",
+          message: "Class updated successfully",
         });
       }
       default:
         return res.status(405).end();
     }
   } catch (error) {
-    console.log("ERR_FETCH_ACADEMIC_SESSION", error);
+    console.log("ERR_FETCH_CLASS", error);
   }
 }

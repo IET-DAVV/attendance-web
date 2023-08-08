@@ -7,6 +7,7 @@ import {
 } from "react";
 import { studentServices, constantsServices } from "../api/services";
 import {
+  AcademicSession,
   IBranch,
   ICurrentClassInfo,
   IStudent,
@@ -24,8 +25,10 @@ interface IGlobalContext {
   branches: Array<IBranch>;
   academicYear: string;
   fetchAcademicSessions: () => void;
-  allAcademicSessions: string[];
-  setAllAcademicSessions: React.Dispatch<SetStateAction<string[]>>;
+  allAcademicSessions: Array<AcademicSession>;
+  setAllAcademicSessions: React.Dispatch<
+    SetStateAction<Array<AcademicSession>>
+  >;
 }
 
 const GlobalContext = createContext<IGlobalContext>({} as IGlobalContext);
@@ -52,7 +55,9 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     id: "2021_CS_A",
   });
   const [branches, setBranches] = useState<Array<IBranch>>([]);
-  const [allAcademicSessions, setAllAcademicSessions] = useState<string[]>([]);
+  const [allAcademicSessions, setAllAcademicSessions] = useState<
+    Array<AcademicSession>
+  >([]);
   const [academicYear, setAcademicYear] = useState<string>("2022_2023");
 
   useEffect(() => {
@@ -109,12 +114,15 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   const fetchAcademicSessions = async () => {
     try {
       const { data } = await constantsServices.getAllAcademicSession();
-      console.log(data);
       setAllAcademicSessions(data?.data);
     } catch (err) {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    console.log({ allAcademicSessions });
+  }, [allAcademicSessions]);
 
   return (
     <GlobalContext.Provider

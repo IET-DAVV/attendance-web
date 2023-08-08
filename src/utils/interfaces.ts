@@ -63,3 +63,9 @@ export interface IFaculty {
   facultyType: string;
   name: string;
 }
+
+export interface AcademicSession {
+  academicSession: string;
+  createdAt: number;
+  modifiedAt: number;
+}

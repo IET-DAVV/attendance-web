@@ -10,23 +10,29 @@ async function getAllBranches() {
 async function getAllAcademicSession() {
   return await API.get("/constants/academicSession");
 }
-async function addNewAcademicSession(data: any) {
+async function addNewAcademicSession(session: string) {
   return await API.post("/constants/add-academicSession", {
-    session: data,
+    session,
   });
 }
-async function deleteAcademicSession(data: any) {
+async function deleteAcademicSession(session: string) {
   return await API.delete("/constants/academicSession/", {
     params: {
-      session: data,
+      session,
     },
   });
 }
 async function updateAcademicSession(data: any) {
   return await API.put("/constants/academicSession/", {
-    oldData: data.oldData,
-    data: data.newData,
+    id: data.academicSession,
+    data: data,
   });
+}
+async function addNewClass(data: any) {
+  return await API.post("/constants/add-class", data);
+}
+async function getAllClasses() {
+  return await API.get("/constants/classes");
 }
 
 const constantsServices = {
@@ -36,6 +42,8 @@ const constantsServices = {
   getAllBranches,
   deleteAcademicSession,
   updateAcademicSession,
+  addNewClass,
+  getAllClasses,
 };
 
 export default constantsServices;

@@ -1,17 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { database } from "@/utils/auth/firebase";
-import {
-  collection,
-  getDoc,
-  doc,
-  updateDoc,
-  query,
-  where,
-  getDocs,
-  writeBatch,
-  setDoc,
-  arrayUnion,
-} from "firebase/firestore";
+import { getDoc, doc, setDoc, updateDoc } from "firebase/firestore";
+import { FIREBASE_COLLECTIONS } from "@/utils/constants";
 
 type Response = {
   status: "success" | "error";
@@ -33,16 +23,35 @@ type Data = {
 };
 
 type RequestData = {
-  year?: string; // 2023
-  branch?: string; // 2023
+  session: string;
 };
 
-async function createNewAcademicYears(data: any) {
-  const docRef = doc(database, "constants", "globals");
-  console.log("data", data);
-  updateDoc(docRef, {
-    academicYears: arrayUnion(data),
-  });
+async function createNewAcademicYears(session: string) {
+  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "academicYears");
+  const exists = await getDoc(docRef);
+  if (!exists.exists()) {
+    setDoc(docRef, {
+      [session]: {
+        academicSession: session,
+        createdAt: Date.now(),
+        modifiedAt: Date.now(),
+      },
+    });
+    return true;
+  } else {
+    const docData = exists.data();
+    if (!docData?.[session]) {
+      updateDoc(docRef, {
+        [session]: {
+          academicSession: session,
+          createdAt: Date.now(),
+          modifiedAt: Date.now(),
+        },
+      });
+      return true;
+    }
+  }
+  return false;
 }
 
 export default async function handler(
@@ -52,9 +61,14 @@ export default async function handler(
   try {
     switch (req.method) {
       case "POST": {
-        const data = req.body;
-        console.log("data", data);
-        await createNewAcademicYears(data.session);
+        const data = req.body as RequestData;
+        const created = await createNewAcademicYears(data.session);
+        if (!created) {
+          return res.status(409).json({
+            status: "error",
+            message: "Academic session already exists",
+          });
+        }
         return res.status(200).json({
           status: "success",
         });
@@ -63,6 +77,10 @@ export default async function handler(
         return res.status(405).end();
     }
   } catch (error) {
-    console.log("ERR_FETCH_DETAINED", error);
+    console.log("ERR_CREATE_ACADEMIC_SESSION", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Something went wrong",
+    });
   }
 }
