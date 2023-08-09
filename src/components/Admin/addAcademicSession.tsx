@@ -33,11 +33,12 @@ const AddAcademicSession: React.FC<{
           placeholder="Ex. 2022_2023_1"
           value={selectedAcademicSession?.academicSession}
           onChange={(event) => {
-            setAcademicSession({
+            setAcademicSession((prevState: any) => ({
+              ...prevState,
               academicSession: event.target.value,
-              createdAt: Date.now(),
+              createdAt: editMode ? prevState.createdAt : Date.now(),
               modifiedAt: Date.now(),
-            });
+            }));
           }}
         />
       </Space>
