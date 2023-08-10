@@ -62,18 +62,19 @@ async function updateAcademicYear(id: string, data: string): Promise<boolean> {
   }
   const academicYearsList = docSnap.data();
   const currAcademicYear = academicYearsList[id];
-  // cl
-  console.log("CURR", currAcademicYear);
   if (!currAcademicYear) {
     return false;
   }
-  await setDoc(docRef, {
-    [id]: {
-      ...currAcademicYear,
-      academicSession: data,
-      modifiedAt: Date.now(),
-    },
-  });
+  const updatedAcademicYear = {
+    ...currAcademicYear,
+    academicSession: data,
+    modifiedAt: Date.now(),
+  };
+  const updatedAcademicYearsList = {
+    ...academicYearsList,
+    [id]: updatedAcademicYear,
+  };
+  await setDoc(docRef, updatedAcademicYearsList);
   return true;
 }
 export default async function handler(
@@ -111,7 +112,9 @@ export default async function handler(
         });
       }
       case "PUT": {
-        const { oldData: id, data } = req.body;
+        const {
+          data: { id, newData: data },
+        } = req.body;
         if (!id) {
           return res.status(400).json({
             status: "error",

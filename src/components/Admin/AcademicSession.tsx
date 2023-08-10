@@ -11,6 +11,7 @@ import CustomTable from "@/components/CustomTable";
 
 interface DataType {
   key: React.Key;
+  id: string;
   academicSession: string;
   createdAt: number;
   modifiedAt: number;
@@ -18,8 +19,9 @@ interface DataType {
 
 const data: DataType[] = [];
 
-export function getSessionFormatted(session: string) {
-  const split = session?.split("_") || [];
+export function getSessionFormatted(session: any) {
+  console.log(session);
+  const split = session?.academicSession?.split("_") || [];
   if (split.length !== 3) return session;
   return `${split[0]} - ${split[1]} (Session ${split[2]})`;
 }
@@ -27,15 +29,12 @@ export function getSessionFormatted(session: string) {
 const AcademicSession: React.FC = () => {
   const [addAcademicSessionModel, setAddAcademicSessionModel] = useState(false);
   const [academicSession, setAcademicSession] = useState({
+    id: "",
     academicSession: "",
     createdAt: 0,
     modifiedAt: 0,
   });
-  const [oldAcademicSession, setOldAcademicSession] = useState({
-    academicSession: "",
-    createdAt: 0,
-    modifiedAt: 0,
-  });
+
   const [editMode, setEditMode] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -50,7 +49,7 @@ const AcademicSession: React.FC = () => {
       await constantsServices.deleteAcademicSession(sessionId);
       setAllAcademicSessions(
         allAcademicSessions.filter(
-          (academicSession) => academicSession.academicSession !== sessionId
+          (academicSession) => academicSession.id !== sessionId
         )
       );
     } catch (err) {
@@ -92,7 +91,6 @@ const AcademicSession: React.FC = () => {
             shape="circle"
             onClick={() => {
               setAcademicSession(record);
-              setOldAcademicSession(record);
               setEditMode(true);
               setAddAcademicSessionModel(true);
             }}
@@ -102,10 +100,7 @@ const AcademicSession: React.FC = () => {
           <Popconfirm
             title={`Delete ${getSessionFormatted(record.academicSession)}`}
             description="Are you sure to delete this Academic Session?"
-            onConfirm={deleteAcademicSessionHandler.bind(
-              null,
-              record.academicSession
-            )}
+            onConfirm={deleteAcademicSessionHandler.bind(null, record.id)}
             onCancel={() => {}}
             okText="Yes"
             cancelText="No"
@@ -128,13 +123,14 @@ const AcademicSession: React.FC = () => {
     setLoading(true);
     try {
       if (editMode) {
+        console.log("edit mode", academicSession);
         await constantsServices.updateAcademicSession({
-          id: academicSession.academicSession,
-          newData: academicSession,
+          id: academicSession?.id,
+          newData: academicSession?.academicSession,
         });
         setAllAcademicSessions(
           allAcademicSessions.map((as) => {
-            if (as.academicSession === oldAcademicSession.academicSession) {
+            if (as.id === academicSession.id) {
               return {
                 ...as,
                 academicSession: academicSession.academicSession,
@@ -146,6 +142,7 @@ const AcademicSession: React.FC = () => {
         setEditMode(false);
         setAddAcademicSessionModel(false);
         message.success("Academic Session Updated Successfully");
+        setLoading(false);
         return;
       }
 
@@ -154,6 +151,7 @@ const AcademicSession: React.FC = () => {
       );
       setAllAcademicSessions([...allAcademicSessions, academicSession]);
       setAcademicSession({
+        id: "",
         academicSession: "",
         createdAt: 0,
         modifiedAt: 0,
@@ -200,6 +198,7 @@ const AcademicSession: React.FC = () => {
         handleOk={() => {
           handleSubmit();
           setAcademicSession({
+            id: "",
             academicSession: "",
             createdAt: 0,
             modifiedAt: 0,
@@ -209,6 +208,7 @@ const AcademicSession: React.FC = () => {
         }}
         handleCancel={() => {
           setAcademicSession({
+            id: "",
             academicSession: "",
             createdAt: 0,
             modifiedAt: 0,

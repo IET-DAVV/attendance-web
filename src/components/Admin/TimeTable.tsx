@@ -248,8 +248,11 @@ const TimeTable: React.FC = () => {
           </Select>
           <Select placeholder="Select Academic Session">
             {allAcademicSessions?.map((session) => (
-              <Option key={session} value={session}>
-                {getSessionFormatted(session)}
+              <Option
+                key={session?.academicSession}
+                value={session?.academicSession}
+              >
+                {getSessionFormatted(session?.academicSession)}
               </Option>
             ))}
           </Select>

@@ -26,12 +26,26 @@ type RequestData = {
   session: string;
 };
 
+//code for generating random id starts with ACS using time stamp
+function generateRandomId(length: number) {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let autoId = "";
+  for (let i = 0; i < length; i++) {
+    autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return "ACS" + autoId + Date.now();
+}
+
 async function createNewAcademicYears(session: string) {
   const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "academicYears");
   const exists = await getDoc(docRef);
+
   if (!exists.exists()) {
+    let id = generateRandomId(3);
     setDoc(docRef, {
-      [session]: {
+      [id]: {
+        id,
         academicSession: session,
         createdAt: Date.now(),
         modifiedAt: Date.now(),
@@ -39,10 +53,12 @@ async function createNewAcademicYears(session: string) {
     });
     return true;
   } else {
+    let id = generateRandomId(3);
     const docData = exists.data();
-    if (!docData?.[session]) {
+    if (!docData?.[id]) {
       updateDoc(docRef, {
-        [session]: {
+        [id]: {
+          id,
           academicSession: session,
           createdAt: Date.now(),
           modifiedAt: Date.now(),
