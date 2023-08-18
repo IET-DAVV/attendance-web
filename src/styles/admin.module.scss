@@ -39,7 +39,6 @@
 }
 
 .timeTable {
-  height: 100vh;
   > div > div {
     height: 100%;
   }
@@ -62,4 +61,10 @@
 }
 .formContainer {
   margin-top: 1rem;
+}
+.submitBtn {
+  margin-top: 1rem;
+  width: 100%;
+  @extend .flexRow;
+  justify-content: flex-end;
 }

@@ -7,6 +7,7 @@ import {
   Input,
   Menu,
   Modal,
+  Result,
   Row,
   Select,
   Table,
@@ -55,6 +56,7 @@ const TimeTable: React.FC = () => {
   const [filteredSubjects, setFilteredSubjects] = useState<ISubject[]>([]);
   const [branch, setBranch] = useState("EI");
   const [section, setSection] = useState("A");
+  const [academicSession, setAcademicSession] = useState("");
   const [faculties, setFaculties] = useState<Array<IFaculty>>([]);
   const [dataSource, setDataSource] = useState<WeekdayRow[]>([
     { key: "Monday", weekday: "Monday", timeSlots: {} },
@@ -231,21 +233,38 @@ const TimeTable: React.FC = () => {
       <div className={styles.flexRow}>
         <h3>Time Table</h3>
         <div className={styles.actionBtns}>
-          <Select placeholder="Select Branch" showSearch>
+          <Select
+            placeholder="Select Branch"
+            showSearch
+            onChange={(value) => {
+              setBranch(value as string);
+            }}
+          >
             {Object.values(branches).map((branch) => (
               <Option key={branch.branchID} value={branch.branchID}>
                 {branch.branchID} - {branch.branchName}
               </Option>
             ))}
           </Select>
-          <Select placeholder="Select Section">
+          <Select
+            placeholder="Select Section"
+            onChange={(value) => {
+              setSection(value as string);
+            }}
+          >
             {["A", "B", "NA"].map((section) => (
               <Option key={section} value={section}>
                 {section}
               </Option>
             ))}
           </Select>
-          <Select placeholder="Select Academic Session" showSearch>
+          <Select
+            placeholder="Select Academic Session"
+            showSearch
+            onChange={(value) => {
+              setAcademicSession(value as string);
+            }}
+          >
             {allAcademicSessions?.map((session) => (
               <Option
                 key={session?.academicSession}
@@ -257,26 +276,35 @@ const TimeTable: React.FC = () => {
           </Select>
         </div>
       </div>
-      <div className={styles.tableContainer}>
-        <div className={styles.timeTable}>
-          <Table
-            bordered
-            dataSource={dataSource}
-            columns={columns}
-            pagination={false}
-            scroll={{
-              x: 1400,
-              y: "100%",
-            }}
-            style={{
-              height: "100%",
-            }}
-          />
-        </div>
-      </div>
-      <div>
-        <Button type="primary">Submit</Button>
-      </div>
+      {!branch || !section || !academicSession ? (
+        <Result
+          status="warning"
+          title="Please select Branch, Section and Academic Session."
+        />
+      ) : (
+        <>
+          <div className={styles.tableContainer}>
+            <div className={styles.timeTable}>
+              <Table
+                bordered
+                dataSource={dataSource}
+                columns={columns}
+                pagination={false}
+                scroll={{
+                  x: 1400,
+                  y: "100%",
+                }}
+                style={{
+                  height: "100%",
+                }}
+              />
+            </div>
+          </div>
+          <div className={styles.submitBtn}>
+            <Button type="primary">Submit</Button>
+          </div>
+        </>
+      )}
       <Modal
         title="Edit Subject"
         open={isModalVisible}
@@ -340,7 +368,7 @@ const TimeTable: React.FC = () => {
               </Card>
             </Col>
             <Col span={12}>
-              <Card title="Add Recess" style={{ height: "100%" }}>
+              <Card title="Add Break" style={{ height: "100%" }}>
                 <Form.Item>
                   <Button
                     type="primary"
