@@ -14,6 +14,8 @@ import {
   FACULTY_TYPE_TABLE_FILTER,
   DESIGNATION_TABLE_FILTER,
 } from "@/utils/constants";
+import { useGlobalContext } from "@/utils/context/GlobalContext";
+
 interface DataType extends IFaculty {
   key: any;
 }
@@ -28,7 +30,9 @@ const Faculties: React.FC = () => {
   const [email, setEmail] = useState("");
   const [facultyType, setFacultyType] = useState("");
   const [name, setName] = useState("");
-  const [allFaculties, setAllFaculties] = useState<DataType[]>([]);
+
+  const { allFaculties, setAllFaculties, fetchFaculties } = useGlobalContext();
+
   const deleteFacultyHandler = async (record: any) => {
     console.log(record);
     setLoading(true);
@@ -44,19 +48,14 @@ const Faculties: React.FC = () => {
     }
     setLoading(false);
   };
+
   useEffect(() => {
-    setLoading(true);
-    facultiesServices
-      .getAllFaculties()
-      .then((res) => {
-        setAllFaculties(res.data.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setLoading(false);
-        console.log(err);
-      });
-  }, []);
+    if (!allFaculties?.length) {
+      setLoading(true);
+      fetchFaculties();
+      setLoading(false);
+    }
+  }, [allFaculties]);
 
   async function submitData(finalObj: IFaculty) {
     setLoading(true);
@@ -217,7 +216,10 @@ const Faculties: React.FC = () => {
           //   ...rowSelection,
           // }}
           columns={columns}
-          dataSource={allFaculties}
+          dataSource={allFaculties?.map((faculty) => ({
+            ...faculty,
+            key: faculty.id,
+          }))}
           scroll={{
             x: 800,
             y: 500,

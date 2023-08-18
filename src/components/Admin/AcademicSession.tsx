@@ -19,9 +19,8 @@ interface DataType {
 
 const data: DataType[] = [];
 
-export function getSessionFormatted(session: any) {
-  console.log(session);
-  const split = session?.academicSession?.split("_") || [];
+export function getSessionFormatted(session: string) {
+  const split = session?.split(/_/) || [];
   if (split.length !== 3) return session;
   return `${split[0]} - ${split[1]} (Session ${split[2]})`;
 }

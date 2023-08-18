@@ -5,11 +5,16 @@ import {
   useEffect,
   useState,
 } from "react";
-import { studentServices, constantsServices } from "../api/services";
+import {
+  studentServices,
+  constantsServices,
+  facultiesServices,
+} from "../api/services";
 import {
   AcademicSession,
   IBranch,
   ICurrentClassInfo,
+  IFaculty,
   IStudent,
   IStudentAttendance,
   ISubject,
@@ -24,11 +29,14 @@ interface IGlobalContext {
   currentClassInfo: ICurrentClassInfo;
   branches: Array<IBranch>;
   academicYear: string;
+  allFaculties: Array<IFaculty>;
+  setAllFaculties: React.Dispatch<SetStateAction<Array<IFaculty>>>;
   fetchAcademicSessions: () => void;
   allAcademicSessions: Array<AcademicSession>;
   setAllAcademicSessions: React.Dispatch<
     SetStateAction<Array<AcademicSession>>
   >;
+  fetchFaculties: () => void;
 }
 
 const GlobalContext = createContext<IGlobalContext>({} as IGlobalContext);
@@ -59,6 +67,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     Array<AcademicSession>
   >([]);
   const [academicYear, setAcademicYear] = useState<string>("2022_2023");
+  const [allFaculties, setAllFaculties] = useState<Array<IFaculty>>([]);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -111,14 +120,23 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
     }
   }, [branches]);
 
-  const fetchAcademicSessions = async () => {
+  async function fetchAcademicSessions() {
     try {
       const { data } = await constantsServices.getAllAcademicSession();
       setAllAcademicSessions(data?.data);
     } catch (err) {
       console.log(err);
     }
-  };
+  }
+
+  async function fetchFaculties() {
+    try {
+      const { data } = await facultiesServices.getAllFaculties();
+      setAllFaculties(data?.data);
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
   useEffect(() => {
     console.log({ allAcademicSessions });
@@ -138,6 +156,9 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         fetchAcademicSessions,
         allAcademicSessions,
         setAllAcademicSessions,
+        allFaculties,
+        setAllFaculties,
+        fetchFaculties,
       }}
     >
       {children}

@@ -9,6 +9,7 @@ import {
   where,
   getDocs,
   writeBatch,
+  setDoc,
 } from "firebase/firestore";
 import { FIREBASE_COLLECTIONS } from "@/utils/constants";
 
@@ -27,22 +28,26 @@ type Data = {
   facultyType: string;
 };
 
-async function createFacultyMultiple(data: Array<any>) {
-  const collectionRef = collection(database, FIREBASE_COLLECTIONS.FACULTIES);
-  const batch = writeBatch(database);
-  data.forEach((branchDoc, i) => {
-    let docId = `FAC_${branchDoc.branchID}_${
-      branchDoc.name?.slice(0, 3).toUpperCase() +
-      Date.now().toString().slice(-4) +
-      i
-    }`;
-    const documentRef = doc(collectionRef, docId);
-    batch.set(documentRef, {
-      id: docId,
-      ...branchDoc,
-    });
+function getFacultyId(branchID: string, name: string) {
+  return `FAC_${branchID}_${name.slice(0, 3).toUpperCase() + Date.now()}`;
+}
+
+async function createFacultyMultiple(faculties: Array<Data>) {
+  const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
+  const docRef = doc(collectionRef, "faculties");
+  const newData = faculties.map((faculty) => ({
+    ...faculty,
+    id: getFacultyId(faculty.branchID, faculty.name),
+    createdAt: Date.now(),
+    modifiedAt: Date.now(),
+  }));
+  const finalFaculties: {
+    [key: string]: Data;
+  } = {};
+  newData.forEach((faculty) => {
+    finalFaculties[faculty.id] = faculty;
   });
-  await batch.commit();
+  await updateDoc(docRef, finalFaculties);
 }
 
 export default async function handler(
@@ -61,7 +66,11 @@ export default async function handler(
       default:
         return res.status(405).end();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.log("ERR_FETCH_DETAINED", error);
+    return res.status(500).json({
+      status: "error",
+      error: error.message as string,
+    });
   }
 }

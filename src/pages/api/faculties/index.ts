@@ -10,6 +10,7 @@ import {
   getDocs,
   writeBatch,
   deleteDoc,
+  setDoc,
 } from "firebase/firestore";
 import { FIREBASE_COLLECTIONS } from "@/utils/constants";
 import { IFaculty } from "@/utils/interfaces";
@@ -30,18 +31,32 @@ type Data = {
 };
 
 async function getAllFaculties() {
-  const collectionRef = collection(database, FIREBASE_COLLECTIONS.FACULTIES);
-  const snapshot = await getDocs(collectionRef);
-  const faculties = snapshot.docs.map((doc) => doc.data());
+  const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
+  const docRef = doc(collectionRef, "faculties");
+  const faculties = [];
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    for (const key in data) {
+      faculties.push(data[key]);
+    }
+  }
   return faculties;
 }
 async function deleteFaculty(id: string): Promise<boolean> {
-  const docRef = doc(database, FIREBASE_COLLECTIONS.FACULTIES, id);
+  const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
+  const docRef = doc(collectionRef, "faculties");
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) {
     return false;
   }
-  await deleteDoc(docRef);
+  const data = docSnap.data();
+  if (!data[id]) {
+    return false;
+  }
+  let allFaculties = data;
+  delete allFaculties[id];
+  await setDoc(docRef, allFaculties);
   return true;
 }
 
@@ -49,15 +64,22 @@ async function updateFaculty(
   id: string,
   data: Partial<IFaculty>
 ): Promise<boolean> {
-  console.log("data", data, id);
-  const docRef = doc(database, FIREBASE_COLLECTIONS.FACULTIES, id);
-  console.log("docRef", docRef);
+  const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
+  const docRef = doc(collectionRef, "faculties");
   const docSnap = await getDoc(docRef);
-  console.log("docSnap", docSnap);
   if (!docSnap.exists()) {
     return false;
   }
-  await updateDoc(docRef, data);
+  const allFaculties = docSnap.data();
+  if (!allFaculties[id]) {
+    return false;
+  }
+  allFaculties[id] = {
+    ...allFaculties[id],
+    ...data,
+    modifiedAt: Date.now(),
+  };
+  await updateDoc(docRef, allFaculties);
   return true;
 }
 

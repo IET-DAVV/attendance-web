@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Col,
-  Dropdown,
   Form,
   Input,
   Menu,
@@ -232,7 +231,7 @@ const TimeTable: React.FC = () => {
       <div className={styles.flexRow}>
         <h3>Time Table</h3>
         <div className={styles.actionBtns}>
-          <Select placeholder="Select Branch">
+          <Select placeholder="Select Branch" showSearch>
             {Object.values(branches).map((branch) => (
               <Option key={branch.branchID} value={branch.branchID}>
                 {branch.branchID} - {branch.branchName}
@@ -246,13 +245,13 @@ const TimeTable: React.FC = () => {
               </Option>
             ))}
           </Select>
-          <Select placeholder="Select Academic Session">
+          <Select placeholder="Select Academic Session" showSearch>
             {allAcademicSessions?.map((session) => (
               <Option
                 key={session?.academicSession}
                 value={session?.academicSession}
               >
-                {getSessionFormatted(session?.academicSession)}
+                {getSessionFormatted(session.academicSession)}
               </Option>
             ))}
           </Select>
@@ -299,7 +298,7 @@ const TimeTable: React.FC = () => {
                       },
                     ]}
                   >
-                    <Select placeholder="Select a subject code">
+                    <Select placeholder="Select a subject code" showSearch>
                       {filteredSubjects.map((subject, i) => (
                         <Option
                           key={subject.subjectCode + i}
@@ -317,7 +316,7 @@ const TimeTable: React.FC = () => {
                       { required: true, message: "Please select a teacher!" },
                     ]}
                   >
-                    <Select showSearch={true} placeholder="Select a teacher">
+                    <Select showSearch placeholder="Select a teacher">
                       {faculties.map((faculty) => (
                         <Option key={faculty.name} value={faculty.id}>
                           {faculty.name}
