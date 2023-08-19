@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
 } from "firebase/firestore";
 import { FIREBASE_COLLECTIONS } from "@/utils/constants";
 
@@ -32,38 +33,46 @@ async function getAllClasses() {
   const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
   const docRef = doc(collectionRef, "classes");
   const docSnap = await getDoc(docRef);
-  return docSnap.data()?.academicYearsList;
+  const data = docSnap.data();
+  if (!data) {
+    return [];
+  }
+  const valArr = Object.values(data);
+  return valArr;
 }
 async function deleteClass(id: string): Promise<boolean> {
-  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "classes");
+  const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
+  const docRef = doc(collectionRef, "classes");
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) {
     return false;
   }
-  const classesList = docSnap.data()?.classesList || [];
-  const index = classesList.findIndex((year: string) => year === id);
-  if (index === -1) {
+  const data = docSnap.data();
+  if (!data[id]) {
     return false;
   }
-  classesList.splice(index, 1);
-  await updateDoc(docRef, { classesList });
+  let allClasses = data;
+  delete allClasses[id];
+  await setDoc(docRef, allClasses);
   return true;
 }
-async function updateClass(id: string, data: string): Promise<boolean> {
-  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "classes");
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return false;
-  }
-  const classesList = docSnap.data()?.classesList || [];
-  const index = classesList.findIndex((year: string) => year === id);
-  if (index === -1) {
-    return false;
-  }
-  classesList[index] = data;
-  await updateDoc(docRef, { classesList });
-  return true;
-}
+
+// async function updateClass(id: string, data: string): Promise<boolean> {
+//   const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
+//   const docRef = doc(collectionRef, "classes");
+//   const docSnap = await getDoc(docRef);
+//   if (!docSnap.exists()) {
+//     return false;
+//   }
+//   const classes = docSnap.data();
+//   if (!classes[id]) {
+//     return false;
+//   }
+//   classes[id].id =
+//   await updateDoc(docRef, { classesList });
+//   return true;
+// }
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response>
@@ -78,7 +87,7 @@ export default async function handler(
         });
       }
       case "DELETE": {
-        const { session: id } = req.query;
+        const { id } = req.query;
 
         if (!id) {
           return res.status(400).json({
@@ -98,26 +107,26 @@ export default async function handler(
           message: "Class deleted successfully",
         });
       }
-      case "PUT": {
-        const { oldData: id, data } = req.body;
-        if (!id) {
-          return res.status(400).json({
-            status: "error",
-            message: "Missing id parameter",
-          });
-        }
-        const updated = await updateClass(id as string, data);
-        if (!updated) {
-          return res.status(404).json({
-            status: "error",
-            message: "Class not found",
-          });
-        }
-        return res.status(200).json({
-          status: "success",
-          message: "Class updated successfully",
-        });
-      }
+      // case "PUT": {
+      //   const { oldData: id, data } = req.body;
+      //   if (!id) {
+      //     return res.status(400).json({
+      //       status: "error",
+      //       message: "Missing id parameter",
+      //     });
+      //   }
+      //   const updated = await updateClass(id as string, data);
+      //   if (!updated) {
+      //     return res.status(404).json({
+      //       status: "error",
+      //       message: "Class not found",
+      //     });
+      //   }
+      //   return res.status(200).json({
+      //     status: "success",
+      //     message: "Class updated successfully",
+      //   });
+      // }
       default:
         return res.status(405).end();
     }

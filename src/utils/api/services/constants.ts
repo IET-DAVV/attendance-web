@@ -1,3 +1,4 @@
+import { IClass } from "@/utils/interfaces";
 import API from "../config";
 
 async function addNewBranchMultiple(data: any) {
@@ -35,6 +36,21 @@ async function getAllClasses() {
   return await API.get("/constants/classes");
 }
 
+async function updateClass(data: IClass) {
+  return await API.put("/constants/classes", {
+    id: data.id,
+    data,
+  });
+}
+
+async function deleteClass(id: string) {
+  return await API.delete("/constants/classes", {
+    params: {
+      id,
+    },
+  });
+}
+
 const constantsServices = {
   addNewAcademicSession,
   getAllAcademicSession,
@@ -44,6 +60,8 @@ const constantsServices = {
   updateAcademicSession,
   addNewClass,
   getAllClasses,
+  updateClass,
+  deleteClass,
 };
 
 export default constantsServices;

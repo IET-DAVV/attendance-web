@@ -22,15 +22,9 @@ type Response = {
 };
 
 type Data = {
-  branchID: string;
-  email: string;
-  enrollmentID: string;
-  enrollmentYear: number;
-  name: string;
-  phone: string;
-  rollID: string;
-  section: string | null;
-  uid: string;
+  id: string;
+  createdAt: number;
+  modifiedAt: number;
 };
 
 type RequestData = {
@@ -39,9 +33,14 @@ type RequestData = {
 };
 
 async function createNewClass(data: any) {
-  const docRef = doc(database, FIREBASE_COLLECTIONS.CONSTANTS, "classes");
+  const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
+  const docRef = doc(collectionRef, "classes");
   updateDoc(docRef, {
-    classesList: arrayUnion(data),
+    [data.id]: {
+      id: data.id,
+      createdAt: Date.now(),
+      modifiedAt: Date.now(),
+    },
   });
 }
 
@@ -53,7 +52,7 @@ export default async function handler(
     switch (req.method) {
       case "POST": {
         const data = req.body;
-        await createNewClass(data.session);
+        await createNewClass(data);
         return res.status(200).json({
           status: "success",
         });

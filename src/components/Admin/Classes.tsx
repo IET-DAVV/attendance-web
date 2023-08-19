@@ -1,170 +1,195 @@
 import React, { useEffect, useState } from "react";
-import { Button, Layout, message, Table } from "antd";
-import type { ColumnType } from "antd/es/table";
+import { Button, Layout, Popconfirm, Table, message } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
-import { PlusOutlined } from "@ant-design/icons";
-import AddStudents from "./addStudents";
+import MainLayout from "@/layouts/MainLayout/MainLayout";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import AddClass from "./AddNewClass";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
-import { IStudent } from "@/utils/interfaces";
-import { studentServices } from "@/utils/api/services";
-import { BRANCH_TABLE_FILTER, SECTION_TABLE_FILTER } from "@/utils/constants";
-import { getTableSorter } from "@/utils/functions";
+import { constantsServices } from "@/utils/api/services";
 import CustomTable from "@/components/CustomTable";
+import { IClass } from "@/utils/interfaces"; // Make sure to import the IClass interface here
 
-interface DataType extends IStudent {
-  key: string;
+interface DataType {
+  key: React.Key;
+  id: string;
+  createdAt: number;
+  modifiedAt: number;
 }
 
-const columns: ColumnType<DataType>[] = [
-  {
-    title: "EnrollmentID",
-    dataIndex: "enrollmentID",
-    width: 200,
-    ...getTableSorter("enrollmentID"),
-  },
-  {
-    title: "RollNo",
-    dataIndex: "rollID",
-    width: 120,
-    ...getTableSorter("rollID"),
-  },
-  {
-    title: "Branch",
-    dataIndex: "branchID",
-    width: 120,
-    ...BRANCH_TABLE_FILTER,
-  },
-  {
-    title: "Section",
-    dataIndex: "section",
-    width: 120,
-    ...SECTION_TABLE_FILTER,
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
-    width: 300,
-    ...getTableSorter("name"),
-    searchable: true,
-  },
-  {
-    title: "Email",
-    dataIndex: "email",
-    width: 250,
-    searchable: true,
-  },
-  {
-    title: "EnrollmentYear",
-    dataIndex: "enrollmentYear",
-    width: 150,
-    searchable: true,
-  },
-];
+const data: DataType[] = [];
 
-const Students: React.FC = () => {
-  const [addSubjectModel, setAddSubjectModel] = useState(false);
+const Classes: React.FC = () => {
+  const [addClassModel, setAddClassModel] = useState(false);
+  const [classData, setClassData] = useState<IClass>({
+    id: "",
+    createdAt: 0,
+    modifiedAt: 0,
+  });
 
-  const [email, setEmail] = useState("");
-  const [enrollmentID, setEnrollmentID] = useState("");
-  const [enrollmentYear, setEnrollmentYear] = useState("");
-  const [name, setName] = useState("");
-  const [rollID, setRollID] = useState("");
-  const [branch, setBranch] = useState("");
-  const [section, setSection] = useState("");
-  const [allStudents, setAllStudents] = useState<DataType[]>([]);
+  const [editMode, setEditMode] = useState(false);
 
-  const { branches } = useGlobalContext();
+  const [loading, setLoading] = useState(false);
+
+  // Replace with your global context and functions
+  const { fetchClasses, setClasses, classes } = useGlobalContext();
+
+  const deleteClassHandler = async (classId: string) => {
+    setLoading(true);
+    try {
+      await constantsServices.deleteClass(classId);
+      setClasses(classes.filter((cls) => cls.id !== classId));
+    } catch (err) {
+      console.log(err);
+    }
+    setLoading(false);
+  };
+
+  const columns: ColumnsType<DataType> = [
+    {
+      title: "Class ID",
+      dataIndex: "id",
+      width: "70%",
+    },
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      width: "15%",
+      render: (createdAt: number) => (
+        <span>{new Date(createdAt).toLocaleDateString()}</span>
+      ),
+    },
+    {
+      title: "Modified At",
+      dataIndex: "modifiedAt",
+      width: "15%",
+      render: (modifiedAt) => (
+        <span>{new Date(modifiedAt).toLocaleDateString()}</span>
+      ),
+    },
+    {
+      title: "Actions",
+      dataIndex: "action",
+      width: "10%",
+      render: (_, record) => (
+        <div className={styles.actionBtns}>
+          {/* <Button
+            type="text"
+            shape="circle"
+            onClick={() => {
+              setEditMode(true);
+              setClassData(record);
+              setAddClassModel(true);
+            }}
+          >
+            <EditOutlined />
+          </Button> */}
+          <Popconfirm
+            title={`Delete ${record.id}`}
+            description="Are you sure to delete this Class?"
+            onConfirm={deleteClassHandler.bind(null, record.id)}
+            onCancel={() => {}}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button danger shape="circle" type="text">
+              <DeleteOutlined />
+            </Button>
+          </Popconfirm>
+        </div>
+      ),
+    },
+  ];
 
   useEffect(() => {
-    const getAllStudents = async () => {
-      const response = await studentServices.getAllStudentsByYear(2021);
-      const data: Array<DataType> = response.data.data;
-      setAllStudents(
-        data
-          ?.map((student: IStudent) => ({
-            ...student,
-            key: student.enrollmentID,
-            enrollmentYear: 2021,
-          }))
-          .sort((a, b) => a.rollID.localeCompare(b.rollID))
-      );
-    };
-    getAllStudents();
+    fetchClasses();
   }, []);
 
-  async function submitData(finalObj: IStudent) {
+  // Handle form submission
+  async function handleSubmit() {
+    console.log({ classData });
+    setLoading(true);
     try {
-      const res = await studentServices.addNewStudent(finalObj);
-      message.success("Student added successfully");
-    } catch (error) {
-      console.log("Error adding student : ", error);
-      message.error("Error adding student");
-    }
-  }
+      if (editMode) {
+        console.log("edit mode", classData);
+        await constantsServices.updateClass(classData);
+        setClasses(
+          classes.map((as) => {
+            if (as.id === classData.id) {
+              return {
+                ...as,
+                ...classData,
+              };
+            }
+            return as;
+          })
+        );
+        setEditMode(false);
+        setAddClassModel(false);
+        message.success("Class Updated Successfully");
+        setLoading(false);
+        return;
+      }
 
-  function handleSubmit() {
-    const facultyObj: IStudent = {
-      email,
-      name,
-      enrollmentID,
-      enrollmentYear: parseInt(enrollmentYear),
-      rollID,
-      branchID: branch,
-      section,
-    };
-    submitData(facultyObj);
+      await constantsServices.addNewClass(classData);
+      setClasses([...classes, classData]);
+      setClassData({
+        id: "",
+        createdAt: 0,
+        modifiedAt: 0,
+      });
+      message.success("Academic Session Added Successfully");
+    } catch (err) {
+      console.log(err);
+      message.error("Something went wrong");
+    }
+    setLoading(false);
   }
 
   return (
     <div className={styles.main}>
       <div className={styles.flexRow}>
-        <h3>Students</h3>
+        <h3>Classes</h3>
         <div className={styles.actionBtns}>
           <Button
             icon={<PlusOutlined />}
             type="primary"
             onClick={() => {
-              setAddSubjectModel(true);
+              setAddClassModel(true);
             }}
           >
-            Add Student
+            Add Class
           </Button>
         </div>
       </div>
       <div className={styles.tableContainer}>
-        <CustomTable<DataType>
+        <CustomTable
+          loading={loading}
           bordered
-          // rowSelection={{
-          //   type: "checkbox",
-          //   ...rowSelection,
-          // }}
           columns={columns}
-          dataSource={allStudents}
-          scroll={{
-            x: 1000,
-            y: 500,
-          }}
+          dataSource={classes?.map((cls) => ({
+            ...cls,
+            key: cls.id,
+          }))}
         />
       </div>
-      <AddStudents
-        isModalOpen={addSubjectModel}
+      <AddClass
+        editMode={editMode}
+        isModalOpen={addClassModel}
+        handleCancel={() => {
+          setAddClassModel(false);
+          setEditMode(false);
+        }}
         handleOk={() => {
           handleSubmit();
-          setAddSubjectModel(false);
+          setAddClassModel(false);
+          setEditMode(false);
         }}
-        handleCancel={() => {
-          setAddSubjectModel(false);
-        }}
-        setEmail={setEmail}
-        setEnrollmentID={setEnrollmentID}
-        setEnrollmentYear={setEnrollmentYear}
-        setName={setName}
-        setRollID={setRollID}
-        setBranch={setBranch}
-        setSection={setSection}
+        setClassData={setClassData}
+        classData={classData}
       />
     </div>
   );
 };
 
-export default Students;
+export default Classes;

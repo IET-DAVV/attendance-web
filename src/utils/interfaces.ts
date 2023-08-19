@@ -70,3 +70,9 @@ export interface AcademicSession {
   createdAt: number;
   modifiedAt: number;
 }
+
+export interface IClass {
+  id: string;
+  createdAt: number;
+  modifiedAt: number;
+}
