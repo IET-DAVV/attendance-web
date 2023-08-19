@@ -57,6 +57,7 @@ const TimeTable: React.FC = () => {
   const [branch, setBranch] = useState("EI");
   const [section, setSection] = useState("A");
   const [academicSession, setAcademicSession] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
   const [faculties, setFaculties] = useState<Array<IFaculty>>([]);
   const [dataSource, setDataSource] = useState<WeekdayRow[]>([
     { key: "Monday", weekday: "Monday", timeSlots: {} },
@@ -73,6 +74,7 @@ const TimeTable: React.FC = () => {
     currentClassInfo,
     fetchAcademicSessions,
     allAcademicSessions,
+    classes,
   } = useGlobalContext();
 
   useEffect(() => {
@@ -274,9 +276,22 @@ const TimeTable: React.FC = () => {
               </Option>
             ))}
           </Select>
+          <Select
+            placeholder="Select Class"
+            showSearch
+            onChange={(value) => {
+              setSelectedClass(value as string);
+            }}
+          >
+            {classes?.map((classItem) => (
+              <Option key={classItem.id} value={classItem.id}>
+                {classItem.id}
+              </Option>
+            ))}
+          </Select>
         </div>
       </div>
-      {!branch || !section || !academicSession ? (
+      {!branch || !section || !academicSession || !selectedClass ? (
         <Result
           status="warning"
           title="Please select Branch, Section and Academic Session."
