@@ -11,12 +11,18 @@ import {
   Row,
   Select,
   Table,
+  message,
 } from "antd";
 import { ColumnType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
 import { useGlobalContext } from "@/utils/context/GlobalContext";
-import { IFaculty, ISubject } from "@/utils/interfaces";
-import { facultiesServices } from "@/utils/api/services";
+import {
+  IFaculty,
+  ISubject,
+  ITimeSlot,
+  ITimeTableData,
+} from "@/utils/interfaces";
+import { facultiesServices, timeTableServices } from "@/utils/api/services";
 import { getSessionFormatted } from "./AcademicSession";
 import { getInitials } from "@/utils/functions";
 
@@ -162,13 +168,17 @@ const TimeTable: React.FC = () => {
     },
   ];
 
+  function getSlotId(time: number) {
+    return `${time}-${time + 1}`;
+  }
+
   timeSlots.forEach((time) => {
     const amPm = time >= 12 ? "PM" : "AM";
     const hour12 = time % 12 || 12;
     columns.push({
       title: `${hour12} - ${hour12 + 1} ${amPm}`,
       dataIndex: "timeSlots",
-      key: `${time}to${time + 1}`,
+      key: getSlotId(time),
       render: (
         timeSlot: {
           [timeSlot: string]: TimeSlot;
@@ -176,12 +186,10 @@ const TimeTable: React.FC = () => {
         record: WeekdayRow,
         rowIndex: number
       ) => {
-        const column = `${time}to${time + 1}`;
+        const column = getSlotId(time);
         return (
           <div
-            onClick={() =>
-              showModal(rowIndex, `${time}to${time + 1}` as string)
-            }
+            onClick={() => showModal(rowIndex, column)}
             className={styles.cellItem}
           >
             {!timeSlot?.[column]
@@ -219,16 +227,55 @@ const TimeTable: React.FC = () => {
     setDataSource(updatedDataSource);
   };
 
-  const timeSlotActions = (
-    <Menu>
-      <Menu.Item key="1" onClick={addTimeSlot}>
-        Add Time Slot
-      </Menu.Item>
-      <Menu.Item key="2" onClick={removeTimeSlot}>
-        Remove Time Slot
-      </Menu.Item>
-    </Menu>
-  );
+  function generateTimeTable() {
+    const timeTable: ITimeTableData = {};
+    dataSource.forEach((row) => {
+      const day = row.weekday as string;
+      row.timeSlots &&
+        Object.entries(row.timeSlots).forEach(([timeSlot, timeSlotData]) => {
+          const { subjectCode, faculty, roomNumber, type } = timeSlotData;
+          const [startTime, endTime] = timeSlot
+            .split("-")
+            .map((time) => parseInt(time));
+
+          let newTimeSlot: ITimeSlot = {
+            subjectCode: subjectCode as string,
+            room: roomNumber as string,
+            startTime,
+            endTime,
+            type,
+          };
+          if (type === "lecture" || type === "lab") {
+            newTimeSlot.faculty = faculty?.id || "";
+          }
+          timeTable[day] = {
+            ...timeTable[day],
+            [timeSlot]: newTimeSlot,
+          };
+        });
+    });
+    return timeTable;
+  }
+
+  async function handleClickSubmit() {
+    if (!academicSession || !selectedClass)
+      return message.error("Please select Academic Session and Class");
+    const loading = message.loading("Generating Time Table...", 0);
+    try {
+      const timeTable = generateTimeTable();
+      await timeTableServices.createTimeTable(
+        academicSession,
+        selectedClass,
+        timeTable
+      );
+      loading();
+      message.success("Time Table Generated Successfully");
+    } catch (err) {
+      console.log(err);
+      loading();
+      message.error("Something went wrong");
+    }
+  }
 
   return (
     <div className={styles.main}>
@@ -316,7 +363,9 @@ const TimeTable: React.FC = () => {
             </div>
           </div>
           <div className={styles.submitBtn}>
-            <Button type="primary">Submit</Button>
+            <Button type="primary" onClick={handleClickSubmit}>
+              Submit
+            </Button>
           </div>
         </>
       )}

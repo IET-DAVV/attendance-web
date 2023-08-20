@@ -76,3 +76,26 @@ export interface IClass {
   createdAt: number;
   modifiedAt: number;
 }
+
+export interface ITimeSlot {
+  subjectCode: string;
+  faculty?: string; // facultyId
+  room: string;
+  startTime: number;
+  endTime: number;
+  type: "lecture" | "lab" | "break";
+}
+
+export interface ITimeTableDay {
+  [timeSlot: string]: ITimeSlot;
+}
+
+export interface ITimeTableData {
+  [day: string]: ITimeTableDay;
+}
+
+export interface ITimeTable {
+  academicSession: string;
+  classID: string;
+  timeTable: ITimeTableData;
+}

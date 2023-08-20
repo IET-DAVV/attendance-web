@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Button, Layout, message, Popconfirm, Table } from "antd";
 import type { ColumnType } from "antd/es/table";
 import styles from "../../styles/admin.module.scss";
-import { PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import AddStudents from "./addStudents";
 import AddFaculty from "./addFaculty";
 import { facultiesServices } from "@/utils/api/services";
@@ -157,11 +157,12 @@ const Faculties: React.FC = () => {
     {
       title: "Action",
       dataIndex: "action",
-      width: 150,
+      width: 100,
       render: (_, record) => (
         <div className={styles.actionBtns}>
           <Button
-            type="primary"
+            type="text"
+            shape="circle"
             onClick={() => {
               setEditMode(true);
               setAddFacultyModel(true);
@@ -173,7 +174,7 @@ const Faculties: React.FC = () => {
               setSelectedFaculty(record);
             }}
           >
-            Edit
+            <EditOutlined />
           </Button>
           <Popconfirm
             title="Delete the Faculty details"
@@ -183,8 +184,8 @@ const Faculties: React.FC = () => {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="primary" danger>
-              Delete
+            <Button type="text" danger shape="circle">
+              <DeleteOutlined />
             </Button>
           </Popconfirm>
         </div>

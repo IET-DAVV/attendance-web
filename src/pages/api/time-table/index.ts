@@ -34,30 +34,6 @@ type RequestData = {
   rollID?: string;
 };
 
-async function getStudentByEnrollmentID(id: string) {
-  const collectionRef = collection(database, "students");
-  const q = query(
-    collectionRef,
-    where(`students.${id}.enrollmentID`, "==", id)
-  );
-  const snapshot = await getDocs(q);
-  if (snapshot.docs.length === 0) return null;
-  const docSnap = snapshot.docs[0];
-  if (!docSnap.exists()) {
-    return null;
-  }
-  return docSnap.data();
-}
-
-async function getStudentByRollID(id: string) {
-  const collectionRef = collection(database, "students");
-  const q = query(collectionRef, where("rollID", "==", id));
-  const snapshot = await getDocs(q);
-  const data = snapshot.docs.map((doc) => doc.data());
-  if (data.length === 0) return null;
-  return data[0];
-}
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response>

@@ -1,13 +1,13 @@
 import { getTableFilters } from "./functions";
 
 export const FIREBASE_COLLECTIONS = {
-  FACULTIES: "faculties",
   STUDENTS: "students",
   ATTENDANCE: "attendance",
   CONSTANTS: "constants",
   BRANCHES: "branches",
   SEMESTERS: "semesters",
   SUBJECTS: "subjects",
+  TIME_TABLE: "timetable",
 };
 
 export const BRANCHES = ["IT", "CS", "EI", "ME", "AS", "ETC", "CIV"];
