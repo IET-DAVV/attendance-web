@@ -1,6 +1,15 @@
 import { ITimeTableData } from "@/utils/interfaces";
 import API from "../config";
 
+async function getTimeTable(academicSession: string, classID: string) {
+  return await API.get("/time-table", {
+    params: {
+      academicSession,
+      classID,
+    },
+  });
+}
+
 async function createTimeTable(
   academicSession: string,
   classID: string,
@@ -14,6 +23,7 @@ async function createTimeTable(
 }
 
 const timeTableServices = {
+  getTimeTable,
   createTimeTable,
 };
 

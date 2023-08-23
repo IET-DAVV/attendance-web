@@ -20,6 +20,7 @@ import {
   IFaculty,
   ISubject,
   ITimeSlot,
+  ITimeTable,
   ITimeTableData,
 } from "@/utils/interfaces";
 import { facultiesServices, timeTableServices } from "@/utils/api/services";
@@ -34,13 +35,13 @@ type TimeSlot = {
   | {
       type: "lecture" | "lab";
       subjectCode: string;
-      roomNumber: string;
+      room: string;
       faculty: {
         id: string;
         name: string;
       };
     }
-  | { type: "break"; subjectCode?: never; roomNumber?: never; faculty?: never }
+  | { type: "break"; subjectCode?: never; room?: never; faculty?: never }
 );
 
 interface WeekdayRow {
@@ -65,6 +66,7 @@ const TimeTable: React.FC = () => {
   const [academicSession, setAcademicSession] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [faculties, setFaculties] = useState<Array<IFaculty>>([]);
+  const [apiTimeTable, setApiTimeTable] = useState<ITimeTableData>({}); // This is the time table that we get from the backend
   const [dataSource, setDataSource] = useState<WeekdayRow[]>([
     { key: "Monday", weekday: "Monday", timeSlots: {} },
     { key: "Tuesday", weekday: "Tuesday", timeSlots: {} },
@@ -73,6 +75,7 @@ const TimeTable: React.FC = () => {
     { key: "Friday", weekday: "Friday", timeSlots: {} },
     { key: "Saturday", weekday: "Saturday", timeSlots: {} },
   ]);
+  const [loading, setLoading] = useState(false);
 
   const {
     branches,
@@ -103,6 +106,41 @@ const TimeTable: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    async function fetchAndSetTimetable() {
+      const { data } = await timeTableServices.getTimeTable(
+        academicSession,
+        selectedClass
+      );
+      const { timeTable } = data.data as ITimeTable;
+      if (timeTable) {
+        console.log(timeTable);
+        setApiTimeTable(timeTable);
+      }
+    }
+    if (branch && section && academicSession && selectedClass) {
+      fetchAndSetTimetable();
+    }
+  }, [branch, section, academicSession, selectedClass]);
+
+  useEffect(() => {
+    if (dataSource && apiTimeTable) {
+      setLoading(true);
+      const newDataSource = [...dataSource];
+      Object.entries(apiTimeTable).forEach(([day, timeSlots]) => {
+        const dayIndex = newDataSource.findIndex((row) => row.weekday === day);
+        if (dayIndex !== -1) {
+          newDataSource[dayIndex].timeSlots = {
+            ...newDataSource[dayIndex].timeSlots,
+            ...timeSlots,
+          };
+        }
+      });
+      setDataSource(newDataSource);
+      setLoading(false);
+    }
+  }, [dataSource, apiTimeTable]);
+
+  useEffect(() => {
     if (!allAcademicSessions?.length) {
       fetchAcademicSessions();
     }
@@ -120,21 +158,21 @@ const TimeTable: React.FC = () => {
         type: "lecture",
         subjectCode: "",
         faculty: { id: "", name: "" },
-        roomNumber: "",
+        room: "",
       };
       setDataSource(newDataSource);
       form.resetFields();
       setIsModalVisible(true);
       return;
     }
-    const { subjectCode, faculty, roomNumber } = cellData;
-    form.setFieldsValue({ subjectCode, faculty, roomNumber });
+    const { subjectCode, faculty, room } = cellData;
+    form.setFieldsValue({ subjectCode, faculty, room });
     setIsModalVisible(true);
   };
 
   const handleOk = () => {
     form.validateFields().then((values) => {
-      const { subjectCode, faculty, roomNumber } = values;
+      const { subjectCode, faculty, room } = values;
       const newRow = { ...dataSource[selectedCell.row] };
       const facultyName = faculties.find((fac) => fac.id === faculty)?.name;
       if (!newRow.timeSlots) {
@@ -143,7 +181,7 @@ const TimeTable: React.FC = () => {
       newRow.timeSlots[selectedCell.column] = {
         subjectCode,
         faculty: { name: facultyName as string, id: faculty },
-        roomNumber,
+        room,
         type: "lecture",
       };
       const updatedDataSource = [...dataSource];
@@ -198,7 +236,7 @@ const TimeTable: React.FC = () => {
               ? `BREAK`
               : `${timeSlot?.[column]?.subjectCode || "NA"} ${
                   getInitials(timeSlot?.[column]?.faculty?.name as string) || ""
-                } ${timeSlot?.[column]?.roomNumber || ""}`}
+                } ${timeSlot?.[column]?.room || ""}`}
           </div>
         );
       },
@@ -233,14 +271,14 @@ const TimeTable: React.FC = () => {
       const day = row.weekday as string;
       row.timeSlots &&
         Object.entries(row.timeSlots).forEach(([timeSlot, timeSlotData]) => {
-          const { subjectCode, faculty, roomNumber, type } = timeSlotData;
+          const { subjectCode, faculty, room, type } = timeSlotData;
           const [startTime, endTime] = timeSlot
             .split("-")
             .map((time) => parseInt(time));
 
           let newTimeSlot: ITimeSlot = {
             subjectCode: subjectCode as string,
-            room: roomNumber as string,
+            room: room as string,
             startTime,
             endTime,
             type,
@@ -349,6 +387,7 @@ const TimeTable: React.FC = () => {
             <div className={styles.timeTable}>
               <Table
                 bordered
+                loading={loading}
                 dataSource={dataSource}
                 columns={columns}
                 pagination={false}
@@ -418,7 +457,7 @@ const TimeTable: React.FC = () => {
                   </Form.Item>
                   <Form.Item
                     label="Room Number"
-                    name="roomNumber"
+                    name="room"
                     rules={[
                       {
                         required: true,

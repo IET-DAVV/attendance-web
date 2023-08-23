@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { database } from "@/utils/auth/firebase";
 import { collection, getDoc, doc, updateDoc, setDoc } from "firebase/firestore";
 import { FIREBASE_COLLECTIONS } from "@/utils/constants";
+import { ITimeTableData } from "@/utils/interfaces";
 
 type Response = {
   status: "success" | "error";
@@ -12,16 +13,7 @@ type Response = {
 export type RequestData = {
   academicSession: string; // 2024_2025_1
   classID: string; // 2021_CS_A
-  timeTable: {
-    [day: string]: {
-      [period: string]: {
-        faculty: any;
-        room: string;
-        subjectCode: string;
-        type: "lecture" | "lab" | "break";
-      };
-    };
-  };
+  timeTable: ITimeTableData;
 };
 
 async function createTimeTable(data: RequestData) {

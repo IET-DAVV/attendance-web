@@ -30,7 +30,7 @@ type Data = {
   facultyType: string;
 };
 
-async function getAllFaculties() {
+export async function getAllFaculties() {
   const collectionRef = collection(database, FIREBASE_COLLECTIONS.CONSTANTS);
   const docRef = doc(collectionRef, "faculties");
   const faculties = [];
@@ -131,7 +131,11 @@ export default async function handler(
       default:
         return res.status(405).end();
     }
-  } catch (error) {
-    console.log("ERR_FETCH_DETAINED", error);
+  } catch (error: any) {
+    console.log("ERR_FETCH_FACULTIES", error);
+    return res.status(500).json({
+      status: "error",
+      error,
+    });
   }
 }
