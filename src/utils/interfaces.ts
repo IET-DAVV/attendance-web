@@ -99,3 +99,11 @@ export interface ITimeTable {
   classID: string;
   timeTable: ITimeTableData;
 }
+
+export type Day =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday";

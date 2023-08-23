@@ -28,6 +28,7 @@ interface IGlobalContext {
   subjects: Array<ISubject>;
   currentSubject: ISubject | null;
   currentClassInfo: ICurrentClassInfo;
+  setCurrentClassInfo: React.Dispatch<SetStateAction<ICurrentClassInfo>>;
   branches: Array<IBranch>;
   academicYear: string;
   allFaculties: Array<IFaculty>;
@@ -59,12 +60,12 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   const [subjects, setSubjects] = useState<Array<ISubject>>([]);
   const [currentSubject, setCurrentSubject] = useState<ISubject | null>(null);
   const [currentClassInfo, setCurrentClassInfo] = useState<ICurrentClassInfo>({
-    year: 2021,
-    branch: "CS",
+    year: 2023,
+    branch: "CSE",
     section: "A",
     sem: 4,
     subjectCode: "CER4C3",
-    id: "2021_CS_A",
+    id: "2023_CSE_A",
   });
   const [branches, setBranches] = useState<Array<IBranch>>([]);
   const [allAcademicSessions, setAllAcademicSessions] = useState<
@@ -161,6 +162,7 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         subjects,
         currentSubject,
         currentClassInfo,
+        setCurrentClassInfo,
         branches,
         academicYear,
         fetchAcademicSessions,

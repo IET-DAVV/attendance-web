@@ -1,4 +1,4 @@
-import { ITimeTableData } from "@/utils/interfaces";
+import { Day, ITimeTableData } from "@/utils/interfaces";
 import API from "../config";
 
 async function getTimeTable(academicSession: string, classID: string) {
@@ -6,6 +6,20 @@ async function getTimeTable(academicSession: string, classID: string) {
     params: {
       academicSession,
       classID,
+    },
+  });
+}
+
+async function getTeacherTimetableForDay(
+  academicSession: string,
+  facultyId: string,
+  day: Day
+) {
+  return await API.get("/time-table/teacher-classes", {
+    params: {
+      academicSession,
+      facultyId,
+      day,
     },
   });
 }
@@ -25,6 +39,7 @@ async function createTimeTable(
 const timeTableServices = {
   getTimeTable,
   createTimeTable,
+  getTeacherTimetableForDay,
 };
 
 export default timeTableServices;

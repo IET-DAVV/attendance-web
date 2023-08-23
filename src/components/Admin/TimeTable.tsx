@@ -210,11 +210,28 @@ const TimeTable: React.FC = () => {
     return `${time}-${time + 1}`;
   }
 
+  function convertTimeSlotTo12Hour(time: number) {
+    const newTime = parseInt(time.toString());
+    if (newTime === 0) {
+      return "12 AM";
+    }
+    if (newTime < 12) {
+      return `${newTime} AM`;
+    }
+    if (newTime === 12) {
+      return "12 PM";
+    }
+    return `${newTime - 12} PM`;
+  }
+
   timeSlots.forEach((time) => {
-    const amPm = time >= 12 ? "PM" : "AM";
-    const hour12 = time % 12 || 12;
+    const hour24 = time === 0 ? 24 : time; // Adjust for midnight
+    const nextHour = hour24 === 24 ? 1 : hour24 + 1; // Adjust for next hour after midnight
+
     columns.push({
-      title: `${hour12} - ${hour12 + 1} ${amPm}`,
+      title: `${convertTimeSlotTo12Hour(hour24)}-${convertTimeSlotTo12Hour(
+        nextHour
+      )}`,
       dataIndex: "timeSlots",
       key: getSlotId(time),
       render: (

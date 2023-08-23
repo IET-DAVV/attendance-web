@@ -1,6 +1,10 @@
 import Head from "next/head";
 import { createRef, useCallback, useEffect, useRef, useState } from "react";
-import { attendanceServices, studentServices } from "@/utils/api/services";
+import {
+  attendanceServices,
+  studentServices,
+  timeTableServices,
+} from "@/utils/api/services";
 import {
   disabledFutureDate,
   getCurrentWeekDates,
@@ -44,6 +48,7 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import TablePDF from "@/components/TablePDF";
 import DetainStudents from "../components/detainStudents";
 import { EXAM_TABLE_FILTER } from "@/utils/constants";
+import { getSessionFormatted } from "@/components/Admin/AcademicSession";
 
 const { Option } = Select;
 
@@ -91,12 +96,18 @@ export default function Home() {
     dayjs(getCurrentWeekDates()[0]),
     dayjs(getCurrentWeekDates()[5]),
   ]);
+  const [academicSession, setAcademicSession] = useState();
   const {
     studentsAttendance,
     setStudentsAttendance,
     currentClassInfo,
+    setCurrentClassInfo,
     academicYear,
     subjects,
+    allAcademicSessions,
+    classes,
+    fetchClasses,
+    fetchAcademicSessions,
   } = useGlobalContext();
 
   const [columns, setColumns] = useState<Array<any>>([]);
@@ -158,7 +169,7 @@ export default function Home() {
       title: "Detained in",
       key: "detainedIn",
       dataIndex: "detainedIn",
-      width: 250,
+      width: 200,
       ...EXAM_TABLE_FILTER,
       render: (detainedExams: Array<string> | undefined, record: any) => {
         if (detainedExams?.length == 0) {
@@ -288,7 +299,7 @@ export default function Home() {
     if (window && !isClientSide) {
       setIsClientSide(true);
     }
-  });
+  }, []);
 
   async function handleSubmitAttendance() {
     const { absentStudents, presentStudents, date, subjectCode, classID } =
@@ -418,6 +429,25 @@ export default function Home() {
     }
   );
 
+  useEffect(() => {
+    if (!classes?.length) {
+      fetchClasses();
+    }
+    if (!allAcademicSessions?.length) {
+      fetchAcademicSessions();
+    }
+  }, [classes, allAcademicSessions]);
+
+  useEffect(() => {
+    if (!academicSession) return;
+    const facultyId = "FAC_CS_RAK1692376560914";
+    const teacherDays = timeTableServices
+      .getTeacherTimetableForDay(academicSession ?? "", facultyId, "Monday")
+      .then((res) => {
+        console.log({ res });
+      });
+  }, [academicSession]);
+
   return (
     <>
       <Head>
@@ -432,19 +462,49 @@ export default function Home() {
             <Select
               placeholder="Subject Code"
               value={currentClassInfo?.subjectCode}
+              onChange={(value) => {
+                setCurrentClassInfo((prev) => ({
+                  ...prev,
+                  subjectCode: value,
+                }));
+              }}
             >
-              <Option value="CER4C1">CER4C1</Option>
-              <Option value="CER4C3">CER4C3</Option>
+              {subjects?.map((subject) => (
+                <Option key={subject.subjectCode} value={subject.subjectCode}>
+                  {subject.subjectCode}
+                </Option>
+              ))}
             </Select>
-            <Select placeholder="Academic Year (Session)">
-              <Option value="2022_2023_1">2022-2023 (Session 1)</Option>
-              <Option value="2022_2023_2">2022-2023 (Session 2)</Option>
+            <Select
+              placeholder="Academic Session (1/2)"
+              value={academicSession}
+              onChange={(value) => {
+                setAcademicSession(value);
+              }}
+            >
+              {allAcademicSessions?.map((session) => (
+                <Option key={session.id} value={session.academicSession}>
+                  {getSessionFormatted(session.academicSession)}
+                </Option>
+              ))}
+            </Select>
+            <Select
+              placeholder="Select Class"
+              value={currentClassInfo?.id}
+              onChange={(value) => {
+                setCurrentClassInfo((prev) => ({
+                  ...prev,
+                  id: value,
+                }));
+              }}
+            >
+              {classes?.map((cls) => (
+                <Option key={cls.id} value={cls.id}>
+                  {cls.id}
+                </Option>
+              ))}
             </Select>
           </div>
-          {/* <h3>
-            {currentClassInfo?.subjectCode} |{" "}
-            {currentClassInfo?.id?.replace("_", " ")}
-          </h3> */}
           <div style={{ visibility: "hidden" }} id="pdfBtnContainer">
             {isClientSide && isClickedOnExportPDF && columns.length && (
               <PDFDownloadLink
