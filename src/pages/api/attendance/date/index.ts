@@ -29,13 +29,13 @@ type Data = {
 };
 
 async function getStudentAttendanceUsingSubjectCode(
-  academicYear: string,
+  academicSession: string,
   attendanceDate: number,
   studentId: string,
   subjectCode: string,
   classId: string
 ) {
-  if (!academicYear)
+  if (!academicSession)
     return {
       status: "error",
       message: "Invalid date",
@@ -44,7 +44,7 @@ async function getStudentAttendanceUsingSubjectCode(
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
@@ -82,13 +82,13 @@ async function getStudentAttendanceUsingSubjectCode(
 }
 
 async function getStudentAttendanceOnDate(
-  academicYear: string,
+  academicSession: string,
   attendanceDate: number,
   studentId: string,
   classId: string,
   subjectCode?: string
 ) {
-  if (!academicYear)
+  if (!academicSession)
     return {
       status: "error",
       message: "Invalid Academic Year",
@@ -158,7 +158,7 @@ async function getStudentAttendanceOnDate(
   }
 
   const withSubjectCode = await getStudentAttendanceUsingSubjectCode(
-    academicYear,
+    academicSession,
     attendanceDate,
     studentId,
     subjectCode,
@@ -185,16 +185,16 @@ export default async function handler(
     if (req.method !== "GET") {
       res.status(405).json({ status: "error", error: "Method not allowed" });
     }
-    const { academicYear, attendanceDate, subjectCode, studentId, classId } =
+    const { academicSession, attendanceDate, subjectCode, studentId, classId } =
       req.query;
 
-    if (!academicYear || !attendanceDate || !studentId || !classId) {
+    if (!academicSession || !attendanceDate || !studentId || !classId) {
       console.log("INVALID_DATA", req.query);
       res.status(400).json({ status: "error", error: "Invalid data" });
     }
 
     const { status, data, message } = await getStudentAttendanceOnDate(
-      academicYear as string,
+      academicSession as string,
       Number(attendanceDate),
       studentId as string,
       subjectCode as string,

@@ -42,6 +42,8 @@ interface IGlobalContext {
   classes: Array<IClass>;
   setClasses: React.Dispatch<SetStateAction<Array<IClass>>>;
   fetchClasses: () => void;
+  academicSession: string;
+  setAcademicSession: React.Dispatch<SetStateAction<string>>;
 }
 
 const GlobalContext = createContext<IGlobalContext>({} as IGlobalContext);
@@ -59,14 +61,9 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   >([]);
   const [subjects, setSubjects] = useState<Array<ISubject>>([]);
   const [currentSubject, setCurrentSubject] = useState<ISubject | null>(null);
-  const [currentClassInfo, setCurrentClassInfo] = useState<ICurrentClassInfo>({
-    year: 2023,
-    branch: "CSE",
-    section: "A",
-    sem: 4,
-    subjectCode: "CER4C3",
-    id: "2023_CSE_A",
-  });
+  const [currentClassInfo, setCurrentClassInfo] = useState<ICurrentClassInfo>(
+    {} as ICurrentClassInfo
+  );
   const [branches, setBranches] = useState<Array<IBranch>>([]);
   const [allAcademicSessions, setAllAcademicSessions] = useState<
     Array<AcademicSession>
@@ -74,6 +71,16 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
   const [academicYear, setAcademicYear] = useState<string>("2022_2023");
   const [allFaculties, setAllFaculties] = useState<Array<IFaculty>>([]);
   const [classes, setClasses] = useState<Array<IClass>>([]);
+  const [academicSession, setAcademicSession] = useState<string>("");
+
+  useEffect(() => {
+    async function getBranches() {
+      const { data } = await constantsServices.getAllBranches();
+      // console.log({ data });
+      setBranches(Object.values(data.data));
+    }
+    getBranches();
+  }, []);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -96,19 +103,10 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
       );
     };
 
-    async function getBranches() {
-      const { data } = await constantsServices.getAllBranches();
-      console.log({ data });
-      setBranches(Object.values(data.data));
+    if (currentClassInfo?.id) {
+      fetchStudents();
     }
-
-    fetchStudents();
-    getBranches();
-  }, [
-    currentClassInfo.branch,
-    currentClassInfo.year,
-    currentClassInfo.section,
-  ]);
+  }, [currentClassInfo]);
 
   useEffect(() => {
     if (branches) {
@@ -174,6 +172,8 @@ const GlobalContextProvider: React.FC<GlobalContextProviderProps> = ({
         classes,
         setClasses,
         fetchClasses,
+        academicSession,
+        setAcademicSession,
       }}
     >
       {children}

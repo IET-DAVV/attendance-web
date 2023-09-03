@@ -8,8 +8,14 @@ import {
   getDocs,
   where,
   collectionGroup,
+  setDoc,
+  addDoc,
 } from "firebase/firestore";
 import { getYear, isBetweenDateRange } from "@/utils/functions";
+import {
+  checkAndCreateParentDocument,
+  createParentDocumentBase,
+} from "../student";
 
 type Response = {
   status: "success" | "error";
@@ -37,7 +43,7 @@ function generateDateRange(startDate: number, endDate: number) {
 }
 
 async function getStudentsAttendanceInDateRange(
-  academicYear: string,
+  academicSession: string,
   dateRange: {
     startDate: number;
     endDate: number;
@@ -48,7 +54,7 @@ async function getStudentsAttendanceInDateRange(
 ) {
   console.log(
     "getStudentsAttendanceInDateRange",
-    academicYear,
+    academicSession,
     dateRange,
     subjectCode,
     studentId
@@ -56,13 +62,29 @@ async function getStudentsAttendanceInDateRange(
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
   );
   const docRef = doc(collectionRef, classId);
   const snapshot = await getDoc(docRef);
+  if (!snapshot.exists()) {
+    await checkAndCreateParentDocument(academicSession, subjectCode, classId);
+    const snapshot = await getDoc(docRef);
+    if (!snapshot.exists()) {
+      setDoc(docRef, {
+        classId,
+        dates: {},
+        detained: {
+          mst1: [],
+          mst2: [],
+          mst3: [],
+          endSem: [],
+        },
+      });
+    }
+  }
   let data: any = {};
   const dates = generateDateRange(dateRange.startDate, dateRange.endDate);
   if (studentId?.length) {
@@ -96,7 +118,7 @@ export default async function handler(
       res.status(405).json({ status: "error", error: "Method not allowed" });
     }
     const {
-      academicYear,
+      academicSession,
       startDate,
       endDate,
       subjectCode,
@@ -109,7 +131,7 @@ export default async function handler(
     }
 
     const data = await getStudentsAttendanceInDateRange(
-      academicYear,
+      academicSession,
       {
         startDate: Number(startDate),
         endDate: Number(endDate),

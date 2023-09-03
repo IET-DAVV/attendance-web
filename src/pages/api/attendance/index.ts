@@ -26,7 +26,7 @@ type Data = {
 };
 
 type RequestData = {
-  academicYear: string;
+  academicSession: string;
   subjectCode: string; // CER4C2
   classId: string;
   attendanceDate: number; // 19_02_2023 (DD_MM_YYYY)
@@ -37,7 +37,7 @@ type RequestData = {
 
 // /attendance/2022_2023/subjects/CER4C3/classes/2021_CS_A.dates.65432165404
 async function getAttendance(
-  academicYear: string,
+  academicSession: string,
   attendanceDate: number,
   subjectCode: string,
   classId: string
@@ -45,7 +45,7 @@ async function getAttendance(
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
@@ -67,19 +67,19 @@ async function getAttendance(
 }
 
 async function markAttendance(
-  academicYear: string,
+  academicSession: string,
   attendanceDate: number,
   subjectCode: string,
   classId: string,
   studentId: string,
   status: "present" | "absent"
 ) {
-  await checkAndCreateParentDocument(academicYear, subjectCode, classId);
+  await checkAndCreateParentDocument(academicSession, subjectCode, classId);
 
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
@@ -116,19 +116,19 @@ async function markAttendance(
 }
 
 async function markAttendanceMultiple(
-  academicYear: string,
+  academicSession: string,
   attendanceDate: number,
   subjectCode: string,
   classId: string,
   studentIds: string[],
   status: "present" | "absent"
 ) {
-  await checkAndCreateParentDocument(academicYear, subjectCode, classId);
+  await checkAndCreateParentDocument(academicSession, subjectCode, classId);
 
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
@@ -174,10 +174,10 @@ export default async function handler(
 ) {
   try {
     if (req.method === "GET") {
-      const { academicYear, subjectCode, attendanceDate, classId } =
+      const { academicSession, subjectCode, attendanceDate, classId } =
         req.query as unknown as RequestData;
       const { presentStudentsList, absentStudentsList } = await getAttendance(
-        academicYear,
+        academicSession,
         Number(attendanceDate),
         subjectCode,
         classId
@@ -189,7 +189,7 @@ export default async function handler(
     }
     if (req.method === "POST") {
       const {
-        academicYear,
+        academicSession,
         subjectCode,
         studentId,
         studentIds,
@@ -199,7 +199,7 @@ export default async function handler(
       } = req.body as RequestData;
       if (studentId) {
         await markAttendance(
-          academicYear,
+          academicSession,
           Number(attendanceDate),
           subjectCode,
           classId,
@@ -208,7 +208,7 @@ export default async function handler(
         );
       } else if (studentIds) {
         await markAttendanceMultiple(
-          academicYear,
+          academicSession,
           Number(attendanceDate),
           subjectCode,
           classId,

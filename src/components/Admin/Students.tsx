@@ -77,7 +77,7 @@ const Students: React.FC = () => {
 
   useEffect(() => {
     const getAllStudents = async () => {
-      const response = await studentServices.getAllStudentsByYear(2021);
+      const response = await studentServices.getAllStudentsByYear(2022);
       const data: Array<DataType> = response.data.data;
       setAllStudents(
         data

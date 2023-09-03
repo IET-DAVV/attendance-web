@@ -25,6 +25,7 @@ import {
   MenuProps,
   message,
   Pagination,
+  Result,
   Select,
   Table,
   Tag,
@@ -88,7 +89,7 @@ export default function Home() {
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [editAttendanceMode, setEditAttendanceMode] = useState(false);
   const [isClientSide, setIsClientSide] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isClickedOnExportPDF, setIsClickedOnExportPDF] = useState(false);
   const [detainedStudentModal, setDetainStudentModal] = useState(false);
   const [exam, setExam] = useState("");
@@ -96,7 +97,6 @@ export default function Home() {
     dayjs(getCurrentWeekDates()[0]),
     dayjs(getCurrentWeekDates()[5]),
   ]);
-  const [academicSession, setAcademicSession] = useState();
   const {
     studentsAttendance,
     setStudentsAttendance,
@@ -108,6 +108,8 @@ export default function Home() {
     classes,
     fetchClasses,
     fetchAcademicSessions,
+    academicSession,
+    setAcademicSession,
   } = useGlobalContext();
 
   const [columns, setColumns] = useState<Array<any>>([]);
@@ -220,7 +222,7 @@ export default function Home() {
   useEffect(() => {
     const fetchDetainedStudents = async () => {
       const res = await attendanceServices.getDetainedStudents(
-        academicYear,
+        academicSession,
         currentClassInfo?.subjectCode,
         currentClassInfo?.id
       );
@@ -229,13 +231,15 @@ export default function Home() {
       console.log(modifiedDetainedList);
       setDetainedStudents(modifiedDetainedList);
     };
-    fetchDetainedStudents();
-  }, []);
+    if (currentClassInfo?.id) {
+      fetchDetainedStudents();
+    }
+  }, [currentClassInfo, academicSession]);
 
   const getCurrentDateRangeAttendance = useCallback(async () => {
     setLoading(true);
     const { data } = await attendanceServices.getStudentsAttendanceInDateRange(
-      academicYear,
+      academicSession as unknown as string,
       {
         startDate: currentDateRange[0].toDate().getTime(),
         endDate: currentDateRange[1].toDate().getTime(),
@@ -253,15 +257,22 @@ export default function Home() {
 
     setColumns([...prevColumns, ...newDateCols, getAttendancePercentageCol()]);
     setLoading(false);
-  }, [currentDateRange, currentClassInfo, academicYear, detainedStudents]);
+  }, [currentDateRange, currentClassInfo, academicSession, detainedStudents]);
 
   useEffect(() => {
-    if (currentDateRange?.length && currentClassInfo?.subjectCode) {
+    if (
+      currentDateRange?.length &&
+      currentClassInfo?.subjectCode &&
+      currentClassInfo?.id &&
+      academicSession
+    ) {
+      console.log("Calling current date range");
       getCurrentDateRangeAttendance();
     }
   }, [
     currentDateRange,
-    currentClassInfo.subjectCode,
+    currentClassInfo,
+    academicSession,
     getCurrentDateRangeAttendance,
   ]);
 
@@ -281,7 +292,7 @@ export default function Home() {
     try {
       const { date, subjectCode, classID } = config;
       await attendanceServices.markStudentAttendanceMultiple(
-        academicYear,
+        academicSession as unknown as string,
         subjectCode,
         date.toString(),
         stduentsList?.map((student) => student.enrollmentID),
@@ -337,14 +348,15 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (Object.values(currentWeekAttendance)?.length) {
+    if (Object.values(currentWeekAttendance)?.length && currentClassInfo?.id) {
+      // console.log("BADAL RHA HAI");
       setStudentsAttendance((prev: any) =>
         prev.map((student: any) =>
           studentAttendanceStatus(currentWeekAttendance, student)
         )
       );
     }
-  }, [currentWeekAttendance]);
+  }, [currentWeekAttendance, currentClassInfo.id]);
 
   const onMenuClick: MenuProps["onClick"] = (e) => {
     if (e.key === "1") {
@@ -462,6 +474,7 @@ export default function Home() {
             <Select
               placeholder="Subject Code"
               value={currentClassInfo?.subjectCode}
+              showSearch
               onChange={(value) => {
                 setCurrentClassInfo((prev) => ({
                   ...prev,
@@ -477,7 +490,7 @@ export default function Home() {
             </Select>
             <Select
               placeholder="Academic Session (1/2)"
-              value={academicSession}
+              value={academicSession || undefined}
               onChange={(value) => {
                 setAcademicSession(value);
               }}
@@ -495,6 +508,9 @@ export default function Home() {
                 setCurrentClassInfo((prev) => ({
                   ...prev,
                   id: value,
+                  branch: value.split("_")[1],
+                  section: value.split("_")[2],
+                  year: parseInt(value.split("_")[0]),
                 }));
               }}
             >
@@ -593,20 +609,28 @@ export default function Home() {
         </div>
 
         <div className={styles.tableContainer}>
-          <Table
-            bordered
-            loading={loading}
-            rowSelection={{
-              type: "checkbox",
-              ...rowSelection,
-            }}
-            columns={columns}
-            dataSource={studentsAttendanceWithDetention}
-            scroll={{
-              x: 1000,
-              y: 500,
-            }}
-          />
+          {!(
+            currentClassInfo?.id &&
+            currentClassInfo?.subjectCode &&
+            academicSession
+          ) ? (
+            <Result title="Select Subject Code, Academic Session and Class to view attendance" />
+          ) : (
+            <Table
+              bordered
+              loading={loading}
+              rowSelection={{
+                type: "checkbox",
+                ...rowSelection,
+              }}
+              columns={columns}
+              dataSource={studentsAttendanceWithDetention}
+              scroll={{
+                x: 1000,
+                y: 500,
+              }}
+            />
+          )}
         </div>
         <CSVLink
           ref={csvBtnRef}

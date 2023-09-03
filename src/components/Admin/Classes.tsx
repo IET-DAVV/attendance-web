@@ -138,7 +138,7 @@ const Classes: React.FC = () => {
         createdAt: 0,
         modifiedAt: 0,
       });
-      message.success("Academic Session Added Successfully");
+      message.success("New Class Added Successfully");
     } catch (err) {
       console.log(err);
       message.error("Something went wrong");

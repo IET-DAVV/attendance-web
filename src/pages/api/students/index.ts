@@ -8,6 +8,7 @@ import {
   query,
   where,
   getDocs,
+  writeBatch,
 } from "firebase/firestore";
 
 type Response = {
@@ -34,11 +35,31 @@ type RequestData = {
   branch?: string; // 2023
 };
 
+// async function covertCSToCSEForAllStudents(studentData: Array<any>) {
+//   const collectionRef = collection(database, "students");
+//   const batch = writeBatch(database);
+//   console.log("DOING");
+//   studentData.forEach((student) => {
+//     if (student.branchID === "CS") {
+//       const classId = `${student.enrollmentYear}_CSE_${student.section}`;
+//       const docRef = doc(collectionRef, classId);
+
+//       batch.update(docRef, {
+//         ...student,
+//         branchID: "CSE",
+//       });
+//     }
+//   });
+//   console.log("DONE");
+//   await batch.commit();
+// }
+
 async function getAllStudentsByYear(year: number) {
   const collectionRef = collection(database, "students");
   const q = query(collectionRef, where("enrollmentYear", "==", year));
   const snapshot = await getDocs(q);
   const students = snapshot.docs.map((doc) => doc.data());
+  // covertCSToCSEForAllStudents(students);
   return students
     ?.map((studentObj) =>
       Object.values(studentObj.students)?.map((student: any) => ({

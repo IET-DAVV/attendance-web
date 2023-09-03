@@ -37,17 +37,17 @@ type RequestData = {
 };
 
 // /attendance/2022_2023/subjects/CER4C3/classes/2021_CS_A/dates/65432165404
-async function createParentDocumentBase(
-  academicYear: string,
+export async function createParentDocumentBase(
+  academicSession: string,
   subjectCode: string,
   classID: string
 ) {
-  const academicYearCollRef = collection(database, "attendance");
-  const academicYearDocRef = doc(academicYearCollRef, academicYear);
-  await setDoc(academicYearDocRef, {
-    academicYear,
+  const academicSessionCollRef = collection(database, "attendance");
+  const academicSessionDocRef = doc(academicSessionCollRef, academicSession);
+  await setDoc(academicSessionDocRef, {
+    academicSession,
   });
-  const subjectsCollRef = collection(academicYearDocRef, "subjects");
+  const subjectsCollRef = collection(academicSessionDocRef, "subjects");
   const subjectsDocRef = doc(subjectsCollRef, subjectCode);
   await setDoc(subjectsDocRef, {
     subjectCode,
@@ -68,26 +68,26 @@ async function createParentDocumentBase(
 
 // /attendance/2022_2023/subjects/CER4C3/classes/2021_CS_A
 export async function checkAndCreateParentDocument(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   classID: string
 ) {
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects"
   );
   const docRef = doc(collectionRef, subjectCode);
   const snapshot = await getDoc(docRef);
 
   if (!snapshot.exists()) {
-    await createParentDocumentBase(academicYear, subjectCode, classID);
+    await createParentDocumentBase(academicSession, subjectCode, classID);
   }
 }
 
 async function getStudentAttendanceByMonth(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   studentId: string,
   classID: string,
@@ -97,7 +97,7 @@ async function getStudentAttendanceByMonth(
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"

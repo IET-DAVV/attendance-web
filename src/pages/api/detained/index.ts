@@ -17,20 +17,20 @@ type Data = {
 };
 
 type RequestData = {
-  academicYear: string; // 2023
+  academicSession: string; // 2023
   subjectCode: string; // CER4C2
   classId: string;
 };
 
 async function getDetained(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   classId: string
 ) {
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
@@ -53,7 +53,7 @@ async function getDetained(
 }
 
 async function markAsDetained(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   classId: string,
   exam: string,
@@ -62,7 +62,7 @@ async function markAsDetained(
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
@@ -97,7 +97,7 @@ async function markAsDetained(
 }
 
 async function markAsDetainedMultiple(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   classId: string,
   exam: string,
@@ -106,7 +106,7 @@ async function markAsDetainedMultiple(
   const collectionRef = collection(
     database,
     "attendance",
-    academicYear,
+    academicSession,
     "subjects",
     subjectCode,
     "classes"
@@ -146,13 +146,18 @@ export default async function handler(
   try {
     switch (req.method) {
       case "GET": {
-        const { academicYear, subjectCode, classId } = req.query as RequestData;
-        const detained = await getDetained(academicYear, subjectCode, classId);
+        const { academicSession, subjectCode, classId } =
+          req.query as RequestData;
+        const detained = await getDetained(
+          academicSession,
+          subjectCode,
+          classId
+        );
         return res.status(200).json({ data: detained, status: "success" });
       }
       case "POST": {
         const {
-          academicYear,
+          academicSession,
           subjectCode,
           exam,
           studentId,
@@ -161,7 +166,7 @@ export default async function handler(
         } = req.body;
         if (studentId && !studentIds) {
           const isMarked = await markAsDetained(
-            academicYear,
+            academicSession,
             subjectCode,
             classId,
             exam,
@@ -179,7 +184,7 @@ export default async function handler(
           });
         } else if (studentIds && !studentId) {
           await markAsDetainedMultiple(
-            academicYear,
+            academicSession,
             subjectCode,
             classId,
             exam,

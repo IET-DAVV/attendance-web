@@ -2,24 +2,24 @@ import API from "../config";
 
 //added classId
 async function getDetainedStudents(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   classId: string
 ) {
   return await API.get("/detained", {
-    params: { academicYear, subjectCode, classId },
+    params: { academicSession, subjectCode, classId },
   });
 }
 
 async function detainStudentFromExam(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   classId: string,
   exam: string,
   studentId: string
 ) {
   return await API.post("/detained", {
-    academicYear,
+    academicSession,
     subjectCode,
     classId,
     exam,
@@ -28,14 +28,14 @@ async function detainStudentFromExam(
 }
 
 async function detainStudentFromExamMultiple(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   classId: string,
   exam: string,
   studentIds: string[]
 ) {
   return await API.post("/detained", {
-    academicYear,
+    academicSession,
     subjectCode,
     classId,
     exam,
@@ -45,19 +45,19 @@ async function detainStudentFromExamMultiple(
 
 //added classId
 async function getAttendanceBySubjectAndDate(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   attendanceDate: string,
   classId: string
 ) {
   return await API.get("/attendance", {
-    params: { subjectCode, attendanceDate, academicYear, classId },
+    params: { subjectCode, attendanceDate, academicSession, classId },
   });
 }
 
 //added classID
 async function markStudentAttendance(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   attendanceDate: string,
   studentId: string,
@@ -69,14 +69,14 @@ async function markStudentAttendance(
     attendanceDate,
     studentId,
     status,
-    academicYear,
+    academicSession,
     classId,
   });
 }
 
 //added classID
 async function markStudentAttendanceMultiple(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   attendanceDate: string,
   studentIds: string[],
@@ -88,57 +88,63 @@ async function markStudentAttendanceMultiple(
     attendanceDate,
     studentIds,
     status,
-    academicYear,
+    academicSession,
     classId,
   });
 }
 
 async function getStudentAttendanceByMonth(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   studentId: string,
   month: number
 ) {
   return await API.get("/attendance/student", {
-    params: { academicYear, subjectCode, studentId, month },
+    params: { academicSession, subjectCode, studentId, month },
   });
 }
 
 //added classId
 async function getStudentAttendanceOnDate(
-  academicYear: string,
+  academicSession: string,
   attendanceDate: string,
   studentId: string,
   classID: string,
   subjectCode?: string
 ) {
   return await API.get("/attendance/date", {
-    params: { attendanceDate, studentId, subjectCode, academicYear, classID },
+    params: {
+      attendanceDate,
+      studentId,
+      subjectCode,
+      academicSession,
+      classID,
+    },
   });
 }
 
 async function getStudentDetainedInSubjects(
-  academicYear: string,
+  academicSession: string,
   studentId: string
 ) {
   return await API.get("/detained/student", {
-    params: { academicYear, studentId },
+    params: { academicSession, studentId },
   });
 }
 
 async function getIsStudentDetainedInSubject(
-  academicYear: string,
+  academicSession: string,
   subjectCode: string,
   exam: string,
   studentId: string
 ) {
   return await API.get("/detained/student", {
-    params: { academicYear, subjectCode, exam, studentId },
+    params: { academicSession, subjectCode, exam, studentId },
   });
 }
 
 async function getStudentsAttendanceInDateRange(
-  academicYear: string,
+  academicSession: string,
   dateRange: {
     startDate: number;
     endDate: number;
@@ -150,7 +156,7 @@ async function getStudentsAttendanceInDateRange(
   if (!dateRange.startDate || !dateRange.endDate)
     throw new Error("Invalid date range");
   return await API.get("/attendance/date/range", {
-    params: { academicYear, ...dateRange, subjectCode, studentId, classId },
+    params: { academicSession, ...dateRange, subjectCode, studentId, classId },
   });
 }
 
